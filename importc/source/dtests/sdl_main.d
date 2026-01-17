@@ -38,5 +38,5 @@ void main()
     // Cleanup
     SDL_DestroyWindow(window);
     writeln("Shutting down SDL2.");
-    SDL_Quit();
+    SDL_Quit(); // quit
 }
