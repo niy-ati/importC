@@ -1,0 +1,5 @@
+{
+    "name": "sdl-version-example",
+    "description": "Zero-wrapper smoke test: real SDL3 init/quit and API calls, no window (headless dummy video driver).",
+    "dependencies": { "sdl": { "path": "../.." } }
+}

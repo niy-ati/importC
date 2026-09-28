@@ -1,0 +1,10 @@
+{
+    "name": "sdl",
+    "description": "SDL3, imported directly via ImportC. No hand-written D bindings.",
+    "license": "Zlib",
+    "sourceFiles": ["sdl_src/sdl.c"],
+    "importPaths": ["sdl_src"],
+    "dflags-posix": ["-P=-I$PACKAGE_DIR/include"],
+    "libs-posix": ["SDL3"],
+    "lflags-posix": ["-L$PACKAGE_DIR/lib/linux-x64", "-rpath=$PACKAGE_DIR/lib/linux-x64"]
+}

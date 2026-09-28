@@ -1,0 +1,13 @@
+{
+    "name": "curl",
+    "description": "libcurl, imported directly via ImportC. No hand-written D bindings.",
+    "license": "curl",
+    "sourceFiles": ["curl_src/curl.c"],
+    "importPaths": ["curl_src"],
+    "dflags-posix": [
+        "-P=-I/usr/include",
+        "-P=-I/usr/include/x86_64-linux-gnu",
+        "-P=-I/usr/local/include"
+    ],
+    "libs-posix": ["curl"]
+}

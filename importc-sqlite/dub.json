@@ -1,0 +1,9 @@
+{
+    "name": "sqlite",
+    "description": "sqlite, imported directly via ImportC. Blocked: see README.md.",
+    "license": "blessing",
+    "sourceFiles": ["sqlite_src/sqlite3.c"],
+    "importPaths": ["sqlite_src"],
+    "dflags-posix": ["-P=-DSQLITE_DISABLE_INTRINSIC"],
+    "dflags-windows": ["-P=-DSQLITE_OMIT_SEH"]
+}

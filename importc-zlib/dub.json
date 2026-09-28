@@ -1,0 +1,14 @@
+{
+    "name": "zlib",
+    "description": "zlib compression library, imported directly via ImportC. No hand-written D bindings.",
+    "license": "Zlib",
+    "sourceFiles": [
+        "zlib_src/adler32.c", "zlib_src/compress.c", "zlib_src/crc32.c",
+        "zlib_src/deflate.c", "zlib_src/gzclose.c", "zlib_src/gzlib.c",
+        "zlib_src/gzread.c", "zlib_src/gzwrite.c", "zlib_src/infback.c",
+        "zlib_src/inffast.c", "zlib_src/inflate.c", "zlib_src/inftrees.c",
+        "zlib_src/trees.c", "zlib_src/uncompr.c", "zlib_src/zutil.c"
+    ],
+    "importPaths": ["zlib_src"],
+    "dflags-posix": ["-P=-DHAVE_UNISTD_H"]
+}

@@ -1,0 +1,5 @@
+{
+    "name": "sljit-add-example",
+    "description": "Zero-wrapper smoke test: JIT-compile int add(int,int) with sljit and call it.",
+    "dependencies": { "sljit": { "path": "../.." } }
+}

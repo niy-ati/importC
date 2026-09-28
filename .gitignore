@@ -1,0 +1,7 @@
+.dub/
+*.o
+*.obj
+*-example
+*.exe
+*.pdb
+*.lst

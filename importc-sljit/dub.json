@@ -1,0 +1,9 @@
+{
+    "name": "sljit",
+    "description": "sljit stack-less JIT compiler, imported directly via ImportC. No hand-written D bindings.",
+    "license": "BSD-2-Clause",
+    "sourceFiles": ["sljit_src/sljitLir.c"],
+    "importPaths": ["sljit_src"],
+    "dflags-linux": ["-P=-fcf-protection=none"],
+    "dflags-windows": ["-P=-DWIN32_LEAN_AND_MEAN"]
+}

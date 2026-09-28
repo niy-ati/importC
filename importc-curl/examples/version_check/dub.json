@@ -1,0 +1,5 @@
+{
+    "name": "curl-version-example",
+    "description": "Zero-wrapper smoke test: init/cleanup a real curl easy handle, set options, query version.",
+    "dependencies": { "curl": { "path": "../.." } }
+}

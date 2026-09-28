@@ -1,0 +1,137 @@
+name: ImportC zero-wrapper libraries - end to end
+
+# CI matrix for the zero-wrapper library packages (SAOC 2026, Milestone 1),
+# separate from e2e.yml's SDL2/bindbc test. Builds dmd from the patched
+# branches on niy-ati/dmd (still under review upstream), then compiles and
+# runs each library's own zero-wrapper example against it, so every push
+# shows a clear pass/fail per library rather than one all-or-nothing status.
+#
+# sqlite is intentionally not built here yet: it needs the Windows SEH/
+# dllimport-address fixes and the Linux __int128 fix from Milestone 2 first.
+# It stays in the matrix so its failure is visible, not silently skipped.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-dmd:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: niy-ati/dmd
+          # These four branches carry the fixes this project's libraries need:
+          # #21890 (typedef shadowing), #20407/__builtin___clear_cache, #20152 (-lib),
+          # and the __cpuidex/_xgetbv MSVC intrinsics fix sljit needs on Windows.
+          # Combined here into one throwaway build branch; see each PR for the
+          # individual, reviewable diffs.
+          ref: master
+          path: dmd-src
+
+      - name: Merge the four fix branches for this build
+        working-directory: dmd-src
+        shell: bash
+        run: |
+          git remote add fixes https://github.com/niy-ati/dmd.git
+          git fetch fixes importc-builtins-unreachable-clear-cache fix21890-typedef-shadowing fix20152-c-lib-static-symbols fix-cpuidex-xgetbv-msvc-intrinsics
+          git -c user.name=ci -c user.email=ci@example.invalid merge --no-edit \
+            fixes/importc-builtins-unreachable-clear-cache \
+            fixes/fix21890-typedef-shadowing \
+            fixes/fix20152-c-lib-static-symbols \
+            fixes/fix-cpuidex-xgetbv-msvc-intrinsics
+
+      - uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: dmd-latest
+
+      - name: Build dmd from source (host compiler from setup-dlang)
+        working-directory: dmd-src/compiler/src
+        shell: bash
+        run: ./build.d
+
+      - name: Build druntime and phobos (Linux)
+        shell: bash
+        run: |
+          DMD=$GITHUB_WORKSPACE/dmd-src/generated/linux/release/64/dmd
+          make -C dmd-src/druntime -j$(nproc) -f posix.mak DMD=$DMD
+          cp dmd-src/druntime/src/__importc_builtins.di dmd-src/druntime/import/__importc_builtins.di
+          cp dmd-src/druntime/src/__builtins_msvc.d dmd-src/druntime/import/__builtins_msvc.d
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dmd-Linux
+          path: |
+            dmd-src/generated
+            dmd-src/druntime
+
+  sljit:
+    needs: build-dmd
+    runs-on: ubuntu-22.04
+    continue-on-error: true # expected to fail on Linux until ImportC supports GNU inline asm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: dmd-Linux, path: dmd-src }
+      - uses: dlang-community/setup-dlang@v1
+      - name: Build and run the sljit zero-wrapper example
+        working-directory: importc-sljit/examples/add
+        run: dub build --compiler=$GITHUB_WORKSPACE/dmd-src/generated/linux/release/64/dmd && ./sljit-add-example
+        # sljit_create_compiler unconditionally calls get_cpu_features(), which
+        # hits GNU inline asm on Linux - ImportC turns that into a runtime
+        # assert, so this fails here regardless of which sljit API is used.
+        # Windows uses the MSVC intrinsics path instead and doesn't hit this;
+        # tracked here until there's a Windows runner job to run it there.
+
+  zlib:
+    needs: build-dmd
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: dmd-Linux, path: dmd-src }
+      - uses: dlang-community/setup-dlang@v1
+      - name: Build and run the zlib zero-wrapper example
+        working-directory: importc-zlib/examples/roundtrip
+        run: dub build --compiler=$GITHUB_WORKSPACE/dmd-src/generated/linux/release/64/dmd && ./zlib-roundtrip-example
+
+  curl:
+    needs: build-dmd
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: dmd-Linux, path: dmd-src }
+      - uses: dlang-community/setup-dlang@v1
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq libcurl4-openssl-dev
+      - name: Build and run the curl zero-wrapper example
+        working-directory: importc-curl/examples/version_check
+        run: dub build --compiler=$GITHUB_WORKSPACE/dmd-src/generated/linux/release/64/dmd && ./curl-version-example
+
+  sdl:
+    needs: build-dmd
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: dmd-Linux, path: dmd-src }
+      - uses: dlang-community/setup-dlang@v1
+      - name: Build and run the SDL3 zero-wrapper example
+        working-directory: importc-sdl/examples/version_check
+        env:
+          LD_LIBRARY_PATH: ${{ github.workspace }}/importc-sdl/lib/linux-x64
+        run: dub build --compiler=$GITHUB_WORKSPACE/dmd-src/generated/linux/release/64/dmd && ./sdl-version-example
+
+  sqlite:
+    needs: build-dmd
+    runs-on: ubuntu-22.04
+    continue-on-error: true # expected to fail until Milestone 2 lands
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: dmd-Linux, path: dmd-src }
+      - uses: dlang-community/setup-dlang@v1
+      - name: Attempt to build sqlite (tracks Milestone 2 progress)
+        working-directory: importc-sqlite
+        run: $GITHUB_WORKSPACE/dmd-src/generated/linux/release/64/dmd -c -Isqlite_src sqlite_src/sqlite3.c

@@ -1,0 +1,5 @@
+{
+    "name": "zlib-roundtrip-example",
+    "description": "Zero-wrapper smoke test: compress then decompress a real buffer via zlib.",
+    "dependencies": { "zlib": { "path": "../.." } }
+}
