@@ -64,7 +64,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/dlang/phobos.git phobos
           DMD=$GITHUB_WORKSPACE/dmd-src/generated/linux/release/64/dmd
-          make -C phobos -j$(nproc) -f posix.mak DMD=$DMD DRUNTIME_PATH=$GITHUB_WORKSPACE/dmd-src/druntime
+          make -C phobos -j$(nproc) -f posix.mak DMD=$DMD DMD_DIR=../dmd-src DRUNTIME_PATH=$GITHUB_WORKSPACE/dmd-src/druntime
           # dmd.conf resolves phobos as a sibling of dmd-src, matching this layout
 
       - uses: actions/upload-artifact@v4
