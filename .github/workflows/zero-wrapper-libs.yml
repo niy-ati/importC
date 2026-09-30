@@ -74,6 +74,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: dmd-Linux, path: dmd-src }
+      - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - name: Build and run the sljit zero-wrapper example
         working-directory: importc-sljit/examples/add
@@ -91,6 +92,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: dmd-Linux, path: dmd-src }
+      - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - name: Build and run the zlib zero-wrapper example
         working-directory: importc-zlib/examples/roundtrip
@@ -103,6 +105,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: dmd-Linux, path: dmd-src }
+      - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq libcurl4-openssl-dev
       - name: Build and run the curl zero-wrapper example
@@ -116,6 +119,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: dmd-Linux, path: dmd-src }
+      - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - name: Build and run the SDL3 zero-wrapper example
         working-directory: importc-sdl/examples/version_check
@@ -131,6 +135,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: dmd-Linux, path: dmd-src }
+      - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - name: Attempt to build sqlite (tracks Milestone 2 progress)
         working-directory: importc-sqlite
