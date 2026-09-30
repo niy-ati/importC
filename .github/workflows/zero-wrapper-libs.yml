@@ -130,6 +130,18 @@ jobs:
         with: { name: dmd-Linux, path: . }
       - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
+      - name: Build SDL3 from source
+        run: |
+          git clone --depth 1 --branch release-3.4.16 https://github.com/libsdl-org/SDL.git /tmp/SDL
+          cmake -S /tmp/SDL -B /tmp/SDL-build -DSDL_VIDEO=OFF -DSDL_UNIX_CONSOLE_BUILD=ON -DSDL_TESTS=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/SDL-build -j$(nproc)
+          mkdir -p importc-sdl/lib/linux-x64
+          cp -P /tmp/SDL-build/libSDL3.so* importc-sdl/lib/linux-x64/
+        # Built here instead of vendored in the repo: a prebuilt .so bakes in
+        # the glibc of whatever machine compiled it (glibc 2.38 added
+        # __isoc23_* versioned symbols for strtol/scanf C23 support), so a
+        # binary built on a newer system fails to link on this older runner.
+        # Building fresh against this runner's own glibc avoids that entirely.
       - name: Build and run the SDL3 zero-wrapper example
         working-directory: importc-sdl/examples/version_check
         env:
