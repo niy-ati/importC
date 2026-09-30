@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: ./build.d
 
-      - name: Build druntime and phobos (Linux)
+      - name: Build druntime (Linux)
         shell: bash
         run: |
           DMD=$GITHUB_WORKSPACE/dmd-src/generated/linux/release/64/dmd
@@ -59,12 +59,21 @@ jobs:
           cp dmd-src/druntime/src/__importc_builtins.di dmd-src/druntime/import/__importc_builtins.di
           cp dmd-src/druntime/src/__builtins_msvc.d dmd-src/druntime/import/__builtins_msvc.d
 
+      - name: Checkout and build phobos (Linux)
+        shell: bash
+        run: |
+          git clone --depth 1 https://github.com/dlang/phobos.git phobos
+          DMD=$GITHUB_WORKSPACE/dmd-src/generated/linux/release/64/dmd
+          make -C phobos -j$(nproc) -f posix.mak DMD=$DMD DRUNTIME_PATH=$GITHUB_WORKSPACE/dmd-src/druntime
+          # dmd.conf resolves phobos as a sibling of dmd-src, matching this layout
+
       - uses: actions/upload-artifact@v4
         with:
           name: dmd-Linux
           path: |
             dmd-src/generated
             dmd-src/druntime
+            phobos
 
   sljit:
     needs: build-dmd
@@ -73,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { name: dmd-Linux, path: dmd-src }
+        with: { name: dmd-Linux, path: . }
       - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - name: Build and run the sljit zero-wrapper example
@@ -91,7 +100,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { name: dmd-Linux, path: dmd-src }
+        with: { name: dmd-Linux, path: . }
       - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - name: Build and run the zlib zero-wrapper example
@@ -104,7 +113,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { name: dmd-Linux, path: dmd-src }
+        with: { name: dmd-Linux, path: . }
       - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq libcurl4-openssl-dev
@@ -118,7 +127,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { name: dmd-Linux, path: dmd-src }
+        with: { name: dmd-Linux, path: . }
       - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - name: Build and run the SDL3 zero-wrapper example
@@ -134,7 +143,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { name: dmd-Linux, path: dmd-src }
+        with: { name: dmd-Linux, path: . }
       - run: chmod +x dmd-src/generated/linux/release/64/dmd
       - uses: dlang-community/setup-dlang@v1
       - name: Attempt to build sqlite (tracks Milestone 2 progress)
