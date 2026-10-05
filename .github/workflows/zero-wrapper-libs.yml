@@ -80,6 +80,20 @@ jobs:
           cd dmd-src
           make -j$(nproc) MODEL=64 HOST_DMD=dmd ENABLE_RELEASE=1 ENABLE_ASSERTS=1 dmd
 
+      - name: Link the default Windows system libraries
+        shell: bash
+        run: |
+          CONF=dmd-src/generated/windows/release/64/sc.ini
+          cat "$CONF"
+          sed -i 's|^DFLAGS=%DFLAGS% -L/OPT:NOICF|DFLAGS=%DFLAGS% -L/OPT:NOICF -L/DEFAULTLIB:kernel32.lib -L/DEFAULTLIB:ntdll.lib -L/DEFAULTLIB:user32.lib|' "$CONF"
+          cat "$CONF"
+        # Officially-released dmd links fine against these without asking,
+        # since cl.exe-compiled objects carry embedded #pragma comment(lib,...)
+        # directives for them. Our from-source build's auto-generated sc.ini
+        # has none, so druntime's own kernel32/ntdll/user32 calls (NtCurrentTeb,
+        # RtlSetVolatileMemory, CharUpperW, etc) come back unresolved at link
+        # time for every downstream package, not just sljit's own code.
+
       - name: Build druntime
         shell: bash
         run: |
