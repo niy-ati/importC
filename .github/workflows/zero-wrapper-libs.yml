@@ -1,10 +1,11 @@
 name: ImportC zero-wrapper libraries - end to end
 
 # CI matrix for the zero-wrapper library packages (SAOC 2026, Milestone 1),
-# separate from e2e.yml's SDL2/bindbc test. Builds dmd from the patched
-# branches on niy-ati/dmd (still under review upstream), then compiles and
-# runs each library's own zero-wrapper example against it, so every push
-# shows a clear pass/fail per library rather than one all-or-nothing status.
+# separate from e2e.yml's SDL2/bindbc test. Builds dmd from niy-ati/dmd
+# master (all four Milestone 1 fixes are merged upstream now), then
+# compiles and runs each library's own zero-wrapper example against it,
+# so every push shows a clear pass/fail per library rather than one
+# all-or-nothing status.
 #
 # sqlite is intentionally not built here yet: it needs the Windows SEH/
 # dllimport-address fixes and the Linux __int128 fix from Milestone 2 first.
@@ -22,25 +23,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: niy-ati/dmd
-          # These four branches carry the fixes this project's libraries need:
-          # #21890 (typedef shadowing), #20407/__builtin___clear_cache, #20152 (-lib),
-          # and the __cpuidex/_xgetbv MSVC intrinsics fix sljit needs on Windows.
-          # Combined here into one throwaway build branch; see each PR for the
-          # individual, reviewable diffs.
           ref: master
           path: dmd-src
-
-      - name: Merge the four fix branches for this build
-        working-directory: dmd-src
-        shell: bash
-        run: |
-          git remote add fixes https://github.com/niy-ati/dmd.git
-          git fetch fixes importc-builtins-unreachable-clear-cache fix21890-typedef-shadowing fix20152-c-lib-static-symbols fix-cpuidex-xgetbv-msvc-intrinsics
-          git -c user.name=ci -c user.email=ci@example.invalid merge --no-edit \
-            fixes/importc-builtins-unreachable-clear-cache \
-            fixes/fix21890-typedef-shadowing \
-            fixes/fix20152-c-lib-static-symbols \
-            fixes/fix-cpuidex-xgetbv-msvc-intrinsics
 
       - uses: dlang-community/setup-dlang@v1
         with:
@@ -75,6 +59,50 @@ jobs:
             dmd-src/druntime
             phobos
 
+  build-dmd-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: niy-ati/dmd
+          ref: master
+          path: dmd-src
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: dmd-latest
+
+      - name: Build dmd from source
+        shell: bash
+        run: |
+          cd dmd-src
+          make -j$(nproc) MODEL=64 HOST_DMD=dmd ENABLE_RELEASE=1 ENABLE_ASSERTS=1 dmd
+
+      - name: Build druntime
+        shell: bash
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          make -j$(nproc) -C dmd-src/druntime MODEL=64 DMD="$DMD" CC=cl.exe
+          cp dmd-src/druntime/src/__importc_builtins.di dmd-src/druntime/import/__importc_builtins.di
+          cp dmd-src/druntime/src/__builtins_msvc.d dmd-src/druntime/import/__builtins_msvc.d
+
+      - name: Checkout and build phobos
+        shell: bash
+        run: |
+          git clone --depth 1 https://github.com/dlang/phobos.git phobos
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          make -j$(nproc) -C phobos MODEL=64 DMD="$DMD" CC=cl.exe DMD_DIR=../dmd-src
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dmd-Windows
+          path: |
+            dmd-src/generated
+            dmd-src/druntime
+            phobos
+
   sljit:
     needs: build-dmd
     runs-on: ubuntu-22.04
@@ -91,8 +119,46 @@ jobs:
         # sljit_create_compiler unconditionally calls get_cpu_features(), which
         # hits GNU inline asm on Linux - ImportC turns that into a runtime
         # assert, so this fails here regardless of which sljit API is used.
-        # Windows uses the MSVC intrinsics path instead and doesn't hit this;
-        # tracked here until there's a Windows runner job to run it there.
+        # Windows uses the MSVC intrinsics path instead and doesn't hit this,
+        # see the sljit-windows job.
+
+  sljit-windows:
+    needs: build-dmd-windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: dmd-Windows, path: . }
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: dlang-community/setup-dlang@v1
+      - name: Build and run the sljit zero-wrapper example
+        shell: bash
+        working-directory: importc-sljit/examples/add
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          dub build --compiler="$DMD"
+          ./sljit-add-example.exe
+
+      - name: Fetch sljit's own test suite
+        shell: bash
+        run: |
+          mkdir -p sljit-test
+          for f in sljitMain.c sljitTest.c sljitTestBuffers.h sljitTestCall.h sljitTestFloat.h sljitTestSerialize.h sljitTestSimd.h sljitConfigPre.h sljitConfigPost.h; do
+            curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/$f" -o "sljit-test/$f"
+          done
+        # Pinned to the same commit this package vendors (see README), so the
+        # test suite matches the library it's actually testing.
+
+      - name: Build and run sljit's own test suite, unmodified
+        shell: bash
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
+            importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c sljit-test/sljitTest.c
+          ./sljit-test/sljit-test-suite.exe -s
+        # Milestone 1: "confirm its own JIT test suite runs unmodified from D".
+        # sljit_test() returns TEST_COUNT - successful_tests, so a 0 exit
+        # code here means every one of its 138 tests genuinely passed.
 
   zlib:
     needs: build-dmd
