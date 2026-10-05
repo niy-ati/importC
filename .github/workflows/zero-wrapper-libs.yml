@@ -136,8 +136,12 @@ jobs:
         working-directory: importc-sljit/examples/add
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          dub build --compiler="$DMD"
+          dub build --compiler="$DMD" --build=release
           ./sljit-add-example.exe
+        # Debug builds don't inline aggressively, and __builtins_msvc.d's
+        # MSVC intrinsics (__cpuidex, _xgetbv, _umul128, etc.) are marked
+        # pragma(inline, true) with no fallback out-of-line symbol, so a
+        # debug build leaves them as unresolved externals at link time.
 
       - name: Fetch sljit's own test suite
         shell: bash
@@ -153,7 +157,7 @@ jobs:
         shell: bash
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          "$DMD" -m64 -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
+          "$DMD" -m64 -release -O -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
             importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c sljit-test/sljitTest.c
           ./sljit-test/sljit-test-suite.exe -s
         # Milestone 1: "confirm its own JIT test suite runs unmodified from D".
