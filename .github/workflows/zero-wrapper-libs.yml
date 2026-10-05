@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: niy-ati/dmd
+          repository: dlang/dmd
           ref: master
           path: dmd-src
 
@@ -64,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: niy-ati/dmd
+          repository: dlang/dmd
           ref: master
           path: dmd-src
 
