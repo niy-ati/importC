@@ -370,30 +370,24 @@ jobs:
           ls -la "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe"
           CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/Iimportc-sljit/sljit_src -Iimportc-sljit/sljit_src -Isljit-test"
           "$DMD" $CFLAGS -c -ofshims.obj importc-sljit/sljit_src/msvc_intrinsic_shims.c
-          "$DMD" $CFLAGS -allinst -c -ofsljitLir.obj importc-sljit/sljit_src/sljitLir.c
-          "$DMD" $CFLAGS -allinst -c -ofsljitMain.obj sljit-test/sljitMain.c
           "$DMD" $CFLAGS -allinst -c -ofsljitTest.obj sljit-test/sljitTest.c
-          "$DMD" -m64 -defaultlib=phobos64 -L/DEFAULTLIB:mincore.lib -ofsljit-test/sljit-test-suite.exe shims.obj sljitLir.obj sljitMain.obj sljitTest.obj
+          "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -ofsljit-test/sljit-test-suite.exe \
+            importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c shims.obj sljitTest.obj
           ls -la sljit-test/sljit-test-suite.exe
           file sljit-test/sljit-test-suite.exe || true
-          set +e
           ./sljit-test/sljit-test-suite.exe -s
-          echo "test exe exit=$?"
-          set -e
-        # The final link step takes only .obj files, no D/C source - unlike
-        # every other invocation in this workflow, dmd's driver might not
-        # add druntime/phobos by default in that mode. Making it explicit.
+        # Only sljitTest.c (the one whose own "union executable_code" clashes
+        # with sljitMain.c's differently-shaped one of the same name) gets
+        # precompiled separately - that keeps its C types out of ImportC's
+        # cross-file type merging. sljitLir.c and sljitMain.c (the one with
+        # the real C main()) still get compiled AND linked in the same
+        # final invocation, same as every working build in this file - a
+        # separate object-only link step didn't wire up the entry point
+        # correctly (confirmed: exit 127, zero output, even with
+        # -defaultlib=phobos64 explicit on that link-only step).
         # Milestone 1: "confirm its own JIT test suite runs unmodified from D".
         # sljit_test() returns TEST_COUNT - successful_tests, so a 0 exit
         # code here means every one of its 138 tests genuinely passed.
-        # Compiling every .c file to its own .obj and linking separately,
-        # mirroring real C's separate-translation-unit model exactly. Handing
-        # dmd multiple .c files in one invocation makes ImportC merge
-        # same-named aggregate types across them (sljitMain.c and
-        # sljitTest.c each define their own, differently-shaped
-        # "union executable_code" - legitimately file-scoped in real C, but
-        # ImportC doesn't keep that isolation when compiling them together).
-        # Compiling separately restores the isolation real C linking has.
 
   zlib:
     needs: build-dmd
