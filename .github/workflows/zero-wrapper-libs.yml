@@ -201,6 +201,7 @@ jobs:
 
       - name: Minimal repro, windows.h only, no importc_msvc_builtins.h
         shell: bash
+        continue-on-error: true # expected to fail, that's the point of this step
         run: |
           mkdir -p minrepro3 && cd minrepro3
           printf '%s\n' \
