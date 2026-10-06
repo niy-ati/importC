@@ -145,6 +145,21 @@ jobs:
         with: { name: dmd-Windows, path: . }
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: dlang-community/setup-dlang@v1
+      - name: Check whether vcruntime.lib/ntdll.lib actually export the 4 remaining symbols
+        shell: pwsh
+        run: |
+          $vcrt = Get-ChildItem -Path ($env:LIB -split ';') -Filter vcruntime.lib -ErrorAction SilentlyContinue | Select-Object -First 1
+          $ntdll = Get-ChildItem -Path ($env:LIB -split ';') -Filter ntdll.lib -ErrorAction SilentlyContinue | Select-Object -First 1
+          "vcruntime.lib: $($vcrt.FullName)"
+          "ntdll.lib: $($ntdll.FullName)"
+          if ($vcrt) { & dumpbin /symbols $vcrt.FullName | Select-String "arch_inverted|arch_avx10ver|MapViewOfFileNuma2" }
+          if ($ntdll) { & dumpbin /symbols $ntdll.FullName | Select-String "RtlSetVolatileMemory" }
+        # These 4 compile clean but fail only at link time, and grepping the
+        # whole dmd repo found none of them in druntime's own .di/.h shims -
+        # so they're real Windows SDK declarations (via windows.h), and this
+        # is a genuine missing-default-lib question, not an ImportC bug.
+        # Checking the actual .lib files instead of guessing which one has them.
+
       - name: Minimal repro, just one call to __cpuidex
         shell: bash
         run: |
