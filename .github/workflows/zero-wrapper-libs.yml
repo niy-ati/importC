@@ -155,13 +155,19 @@ jobs:
             'void test(int a[static 4]) {' \
             '    __cpuidex(a, 0, 0);' \
             '}' > test.c
+          printf '%s\n' \
+            'extern(C) void test(int* a);' \
+            'void main() { int[4] a; test(a.ptr); }' > main.d
           cat test.c
+          cat main.d
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          "$DMD" -m64 -oftest.exe test.c
+          "$DMD" -m64 -lib -P=-DWIN32_LEAN_AND_MEAN -oftest.lib test.c
+          echo "library build exit=$?"
+          "$DMD" -m64 -oftest.exe main.d test.lib
           echo "link exit=$?"
-        # Nicholas's reduction ask: does this fail the same way as the full
-        # sljit build, or is something about sljit's own build specifically
-        # triggering it.
+        # Two stages on purpose, same shape as the real build: a library
+        # object compiled from C, then linked into a separate D executable.
+        # A single-file link doesn't reproduce the real failure.
 
       - name: Compile sljitLir.obj
         shell: bash
