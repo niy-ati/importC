@@ -145,19 +145,26 @@ jobs:
         with: { name: dmd-Windows, path: . }
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: dlang-community/setup-dlang@v1
-      - name: Inspect sljitLir.obj's symbol table for the MSVC intrinsics
+      - name: Compile sljitLir.obj
         shell: bash
         working-directory: importc-sljit
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          echo "=== compiling ==="
           "$DMD" -m64 -c -P=-DWIN32_LEAN_AND_MEAN -Isljit_src sljit_src/sljitLir.c -ofsljitLir.obj
           echo "compile exit=$?"
           ls -la sljitLir.obj
-          echo "=== full symbol count ==="
-          dumpbin /symbols sljitLir.obj | wc -l
-          echo "=== matching symbols ==="
-          dumpbin /symbols sljitLir.obj | grep -i "cpuidex\|xgetbv\|umul128" ; echo "grep exit=$?"
+
+      - name: Dump its symbol table via cmd, not bash
+        shell: cmd
+        working-directory: importc-sljit
+        run: dumpbin /symbols sljitLir.obj > symbols.txt
+
+      - name: Show the matching symbols
+        shell: bash
+        working-directory: importc-sljit
+        run: |
+          wc -l symbols.txt
+          grep -i "cpuidex\|xgetbv\|umul128" symbols.txt ; echo "grep exit=$?"
 
       - name: Build and run the sljit zero-wrapper example
         shell: bash
