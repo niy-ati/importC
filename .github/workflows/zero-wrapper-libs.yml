@@ -199,6 +199,31 @@ jobs:
         # to test whether it's the combination/volume of distinct intrinsics
         # in one translation unit that breaks, not any single one alone.
 
+      - name: Minimal repro, same call but without importc_msvc_builtins.h
+        shell: bash
+        run: |
+          mkdir -p minrepro3 && cd minrepro3
+          printf '%s\n' \
+            'void test(int a[static 4]) {' \
+            '    __cpuidex(a, 0, 0);' \
+            '}' > test.c
+          printf '%s\n' \
+            'extern(C) void test(int* a);' \
+            'void main() { int[4] a; test(a.ptr); }' > main.d
+          cat test.c
+          cat main.d
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -lib -P=-DWIN32_LEAN_AND_MEAN -oftest.lib test.c
+          echo "library build exit=$?"
+          "$DMD" -m64 -oftest.exe main.d test.lib
+          echo "link exit=$?"
+        # Identical to the very first repro, minus the explicit
+        # #include <importc_msvc_builtins.h> line. sljitLir.c never includes
+        # that header anywhere (grepped the whole package, no match) - it
+        # only includes <windows.h>. If removing it reproduces the real
+        # LNK2019, that's the actual root cause: the ImportC-to-D-template
+        # redirect for these intrinsics never gets wired up for this package.
+
       - name: Compile sljitLir.obj
         shell: bash
         working-directory: importc-sljit
