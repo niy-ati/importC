@@ -298,6 +298,47 @@ jobs:
         # the real unmodified build used for the actual Milestone 1 step.
         # Whichever checkpoint is the LAST one printed tells us exactly
         # which block the crash is inside.
+
+      - name: Bisect inside test11() itself, line by line
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          mkdir -p sljit-test5 && cd sljit-test5
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitTest.c" -o sljitTest.c
+          for f in sljitTestBuffers.h sljitTestCall.h sljitTestFloat.h sljitTestSerialize.h sljitTestSimd.h sljitConfigPre.h sljitConfigPost.h; do
+            curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/$f" -o "$f"
+          done
+          sed -i \
+            -e '1165s/$/ printf("ckpt11: after create_compiler\\n"); fflush(stdout);/' \
+            -e '1188s/$/ printf("ckpt11: after emit_enter\\n"); fflush(stdout);/' \
+            -e '1222s/$/ printf("ckpt11: after generate_code\\n"); fflush(stdout);/' \
+            -e '1231s/$/ printf("ckpt11: after first func1 call\\n"); fflush(stdout);/' \
+            -e '1237s/$/ printf("ckpt11: after set_const 1\\n"); fflush(stdout);/' \
+            -e '1245s/$/ printf("ckpt11: after second func1 call\\n"); fflush(stdout);/' \
+            -e '1250s/$/ printf("ckpt11: after free_code\\n"); fflush(stdout);/' \
+            sljitTest.c
+          grep -c "ckpt11:" sljitTest.c
+          cd ..
+          mkdir -p mainrepro5 && cd mainrepro5
+          cp ../mainrepro3/driver.c .
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/I../importc-sljit/sljit_src -P=-DWIN32_LEAN_AND_MEAN -I../importc-sljit/sljit_src -I../sljit-test5"
+          "$DMD" $CFLAGS -c -ofshims5.obj ../importc-sljit/sljit_src/msvc_intrinsic_shims.c
+          "$DMD" $CFLAGS -allinst -c -ofsljitTest5.obj ../sljit-test5/sljitTest.c
+          "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -ofdriver5.exe driver.c ../importc-sljit/sljit_src/sljitLir.c shims5.obj sljitTest5.obj
+          echo "build exit=$?"
+          ./driver5.exe -v
+          echo "run exit=$?"
+        # Narrowing inside test11() itself: checkpoints after
+        # sljit_create_compiler, sljit_emit_enter, sljit_generate_code, the
+        # first JIT-compiled code.func1() call, the first sljit_set_const
+        # (code-patching) call, the second code.func1() call (running the
+        # patched code), and sljit_free_code. Whichever checkpoint is last
+        # tells us exactly which sljit API call the crash happens inside or
+        # right after.
+        # which block the crash is inside.
         # sljitMain.c is unmodified and just calls sljit_test() directly, so
         # this diagnostic driver (not part of the real build, just for
         # narrowing this down) does the exact same call but with explicit
