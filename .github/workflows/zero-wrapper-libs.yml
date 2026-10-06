@@ -164,6 +164,22 @@ jobs:
         # and the static lib* variants in case the CPU-dispatch data lives
         # only in the static runtime, not the DLL import stub.
 
+      - name: Read the real SDK header source for the 4 remaining symbols
+        shell: pwsh
+        run: |
+          $roots = $env:INCLUDE -split ';' | Where-Object { $_ }
+          $pattern = 'arch_inverted|arch_avx10ver|MapViewOfFileNuma2|RtlSetVolatileMemory'
+          foreach ($r in $roots) {
+            Get-ChildItem -Path $r -Filter *.h -Recurse -ErrorAction SilentlyContinue |
+              Select-String -Pattern $pattern -ErrorAction SilentlyContinue |
+              ForEach-Object { "$($_.Path):$($_.LineNumber): $($_.Line.Trim())" }
+          }
+        # Grepping the actual Windows SDK / UCRT / VC header source on the
+        # runner for how these 4 are really declared, instead of guessing
+        # which .lib should have them (that came back empty for all 6
+        # checked). This shows the real context: inline/forceinline wrapper,
+        # macro, or something version-gated.
+
       - name: Minimal repro, just one call to __cpuidex
         shell: bash
         run: |
