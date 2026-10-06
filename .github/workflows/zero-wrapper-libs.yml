@@ -232,7 +232,7 @@ jobs:
         run: |
           cd minrepro3
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          "$DMD" -m64 -lib -P=-DWIN32_LEAN_AND_MEAN -P=-include=importc_msvc_builtins.h -oftest2.lib test.c
+          "$DMD" -m64 -lib -P=-DWIN32_LEAN_AND_MEAN -P=/FIimportc_msvc_builtins.h -oftest2.lib test.c
           echo "library build exit=$?"
           "$DMD" -m64 -oftest2.exe main.d test2.lib
           echo "link exit=$?"
@@ -285,7 +285,7 @@ jobs:
         shell: bash
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          "$DMD" -m64 -release -O -allinst -P=-include=importc_msvc_builtins.h -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
+          "$DMD" -m64 -release -O -allinst -P=/FIimportc_msvc_builtins.h -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
             importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c sljit-test/sljitTest.c
           ./sljit-test/sljit-test-suite.exe -s
         # Milestone 1: "confirm its own JIT test suite runs unmodified from D".
