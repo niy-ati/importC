@@ -145,6 +145,24 @@ jobs:
         with: { name: dmd-Windows, path: . }
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: dlang-community/setup-dlang@v1
+      - name: Minimal repro, just one call to __cpuidex
+        shell: bash
+        run: |
+          mkdir -p minrepro && cd minrepro
+          printf '%s\n' \
+            '#include <importc_msvc_builtins.h>' \
+            '' \
+            'void test(int a[static 4]) {' \
+            '    __cpuidex(a, 0, 0);' \
+            '}' > test.c
+          cat test.c
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -oftest.exe test.c
+          echo "link exit=$?"
+        # Nicholas's reduction ask: does this fail the same way as the full
+        # sljit build, or is something about sljit's own build specifically
+        # triggering it.
+
       - name: Compile sljitLir.obj
         shell: bash
         working-directory: importc-sljit
