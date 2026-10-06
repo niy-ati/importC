@@ -376,7 +376,7 @@ jobs:
           ls -la sljit-test/sljit-test-suite.exe
           file sljit-test/sljit-test-suite.exe || true
           find . -iname "*.dll" 2>/dev/null
-          cmd //c "sljit-test\sljit-test-suite.exe -s"
+          cmd /c "sljit-test\sljit-test-suite.exe -s"
           echo "cmd exit=$?"
           ./sljit-test/sljit-test-suite.exe -s
         # Only sljitTest.c (the one whose own "union executable_code" clashes
