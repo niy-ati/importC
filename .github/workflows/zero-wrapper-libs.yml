@@ -366,7 +366,7 @@ jobs:
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
           "$DMD" -m64 -c -ofshims.obj importc-sljit/sljit_src/msvc_intrinsic_shims.c
-          "$DMD" -m64 -release -O -allinst -P=/FIimportc_msvc_builtins.h -L/DEFAULTLIB:mincore.lib -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
+          "$DMD" -m64 -release -O -allinst -P=/FIimportc_msvc_builtins.h -P=/Iimportc-sljit/sljit_src -L/DEFAULTLIB:mincore.lib -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
             importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c sljit-test/sljitTest.c shims.obj
           ./sljit-test/sljit-test-suite.exe -s
         # Milestone 1: "confirm its own JIT test suite runs unmodified from D".
@@ -374,6 +374,13 @@ jobs:
         # code here means every one of its 138 tests genuinely passed.
         # Compiling the shim to its own .obj first, same as dub does per
         # source file - handing dmd all 4 .c files together in one command
+        # didn't actually matter (same failure persisted either way).
+        # Real cause: dmd's own -I flag never reaches the actual cl.exe
+        # preprocess step (confirmed in dmd's link.d source - only a single
+        # fixed include path derived from importc.h's own location, plus
+        # -P= switches, get forwarded). sljitMain.c's quoted #include
+        # "sljitLir.h" needs a real cross-directory search path, so it has
+        # to go through -P=/I the same way /FI already does.
         # broke sljitMain.c's own include-path resolution (deterministic,
         # not a flake), dub's separate-compile-then-link model never hit it.
 
