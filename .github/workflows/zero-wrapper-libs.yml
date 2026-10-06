@@ -229,6 +229,9 @@ jobs:
 
       - name: Same repro, forcing the include without touching the source
         shell: bash
+        continue-on-error: true # keep going so the later real-build steps still run
+        env:
+          MSYS_NO_PATHCONV: 1
         run: |
           cd minrepro3
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
@@ -241,6 +244,8 @@ jobs:
         # source. If this links clean, the same flag applied to sljit's own
         # build (via dflags-windows in dub.json, not the vendored .c file)
         # should fix it without violating "runs unmodified from D".
+        # MSYS_NO_PATHCONV stops Git Bash from mangling the /FI... argument
+        # into a bogus Windows path before it reaches cl.exe.
 
       - name: Compile sljitLir.obj
         shell: bash
@@ -283,6 +288,8 @@ jobs:
 
       - name: Build and run sljit's own test suite, unmodified
         shell: bash
+        env:
+          MSYS_NO_PATHCONV: 1
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
           "$DMD" -m64 -release -O -allinst -P=/FIimportc_msvc_builtins.h -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
