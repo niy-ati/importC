@@ -5,5 +5,5 @@
     "sourceFiles": ["sljit_src/sljitLir.c"],
     "importPaths": ["sljit_src"],
     "dflags-linux": ["-P=-fcf-protection=none"],
-    "dflags-windows": ["-P=-DWIN32_LEAN_AND_MEAN"]
+    "dflags-windows": ["-P=-DWIN32_LEAN_AND_MEAN", "-P=-include=importc_msvc_builtins.h"]
 }

@@ -226,6 +226,21 @@ jobs:
         # only - to see if that alone reproduces the real LNK2019 instead of
         # a compile-time "undefined identifier" error.
 
+      - name: Same repro, forcing the include without touching the source
+        shell: bash
+        run: |
+          cd minrepro3
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -lib -P=-DWIN32_LEAN_AND_MEAN -P=-include=importc_msvc_builtins.h -oftest2.lib test.c
+          echo "library build exit=$?"
+          "$DMD" -m64 -oftest2.exe main.d test2.lib
+          echo "link exit=$?"
+        # Same test.c as the previous step, unmodified - just force-including
+        # importc_msvc_builtins.h via a compiler flag instead of editing the
+        # source. If this links clean, the same flag applied to sljit's own
+        # build (via dflags-windows in dub.json, not the vendored .c file)
+        # should fix it without violating "runs unmodified from D".
+
       - name: Compile sljitLir.obj
         shell: bash
         working-directory: importc-sljit
@@ -269,7 +284,7 @@ jobs:
         shell: bash
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          "$DMD" -m64 -release -O -allinst -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
+          "$DMD" -m64 -release -O -allinst -P=-include=importc_msvc_builtins.h -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
             importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c sljit-test/sljitTest.c
           ./sljit-test/sljit-test-suite.exe -s
         # Milestone 1: "confirm its own JIT test suite runs unmodified from D".
