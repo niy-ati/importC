@@ -145,6 +145,26 @@ jobs:
         with: { name: dmd-Windows, path: . }
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: dlang-community/setup-dlang@v1
+      - name: Does a trivial ImportC main() even run at all
+        shell: bash
+        run: |
+          mkdir -p mainrepro && cd mainrepro
+          printf '%s\n' \
+            '#include <stdio.h>' \
+            'int main(int argc, char* argv[]) {' \
+            '    printf("hello from C main\n");' \
+            '    return 42;' \
+            '}' > trivial.c
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -oftrivial.exe trivial.c
+          echo "build exit=$?"
+          ./trivial.exe
+          echo "run exit=$?"
+        # Isolating one single question before going any deeper into sljit's
+        # own code: does dmd's ImportC even correctly wire up a plain C
+        # main() as the real process entry point at all, completely decoupled
+        # from sljit, multi-file builds, or any of the intrinic shims.
+
       - name: Check which actual .lib exports the 4 remaining symbols
         shell: pwsh
         run: |
