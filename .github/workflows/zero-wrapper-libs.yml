@@ -180,6 +180,24 @@ jobs:
         # checked). This shows the real context: inline/forceinline wrapper,
         # macro, or something version-gated.
 
+      - name: Read the full context around each declaration
+        shell: pwsh
+        run: |
+          $vc = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\include\immintrin.h"
+          $winnt = "C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\winnt.h"
+          $memapi = "C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\memoryapi.h"
+          "=== immintrin.h 95-145 ==="
+          (Get-Content $vc)[94..144]
+          "=== winnt.h 23240-23280 ==="
+          (Get-Content $winnt)[23239..23279]
+          "=== memoryapi.h 895-925 ==="
+          (Get-Content $memapi)[894..924]
+        # The grep above found exact line numbers for all 4 symbols. Reading
+        # the surrounding declaration context (declspec, calling convention,
+        # any version/feature guard) to find out how real cl.exe actually
+        # resolves these at link time, since no .lib on this runner exports
+        # any of them as a plain symbol.
+
       - name: Minimal repro, just one call to __cpuidex
         shell: bash
         run: |
