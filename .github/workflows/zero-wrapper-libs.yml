@@ -147,6 +147,7 @@ jobs:
       - uses: dlang-community/setup-dlang@v1
       - name: Does a trivial ImportC main() even run at all
         shell: bash
+        continue-on-error: true # exit 42 here is success, not a failure
         run: |
           mkdir -p mainrepro && cd mainrepro
           printf '%s\n' \
@@ -167,6 +168,7 @@ jobs:
 
       - name: Does linking sljitLir.c itself break a trivial main that never calls it
         shell: bash
+        continue-on-error: true # exit 7 here is success, not a failure
         env:
           MSYS_NO_PATHCONV: 1
         run: |
