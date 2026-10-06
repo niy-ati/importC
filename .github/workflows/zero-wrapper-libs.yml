@@ -150,8 +150,14 @@ jobs:
         working-directory: importc-sljit
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          "$DMD" -m64 -c -Isljit_src sljit_src/sljitLir.c -ofsljitLir.obj
-          dumpbin /symbols sljitLir.obj | grep -i "cpuidex\|xgetbv\|umul128" || true
+          echo "=== compiling ==="
+          "$DMD" -m64 -c -P=-DWIN32_LEAN_AND_MEAN -Isljit_src sljit_src/sljitLir.c -ofsljitLir.obj
+          echo "compile exit=$?"
+          ls -la sljitLir.obj
+          echo "=== full symbol count ==="
+          dumpbin /symbols sljitLir.obj | wc -l
+          echo "=== matching symbols ==="
+          dumpbin /symbols sljitLir.obj | grep -i "cpuidex\|xgetbv\|umul128" ; echo "grep exit=$?"
 
       - name: Build and run the sljit zero-wrapper example
         shell: bash
