@@ -338,7 +338,38 @@ jobs:
         # patched code), and sljit_free_code. Whichever checkpoint is last
         # tells us exactly which sljit API call the crash happens inside or
         # right after.
-        # which block the crash is inside.
+
+      - name: Checkpoint every test call from test11 through test29
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          mkdir -p sljit-test6 && cd sljit-test6
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitTest.c" -o sljitTest.c
+          for f in sljitTestBuffers.h sljitTestCall.h sljitTestFloat.h sljitTestSerialize.h sljitTestSimd.h sljitConfigPre.h sljitConfigPost.h; do
+            curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/$f" -o "$f"
+          done
+          for n in 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29; do
+            sed -i "s/^\ttest${n}();/\ttest${n}(); printf(\"ckpt: after test${n}\\\\n\"); fflush(stdout);/" sljitTest.c
+          done
+          grep -c "ckpt: after test" sljitTest.c
+          cd ..
+          mkdir -p mainrepro6 && cd mainrepro6
+          cp ../mainrepro3/driver.c .
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/I../importc-sljit/sljit_src -P=-DWIN32_LEAN_AND_MEAN -I../importc-sljit/sljit_src -I../sljit-test6"
+          "$DMD" $CFLAGS -c -ofshims6.obj ../importc-sljit/sljit_src/msvc_intrinsic_shims.c
+          "$DMD" $CFLAGS -allinst -c -ofsljitTest6.obj ../sljit-test6/sljitTest.c
+          "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -ofdriver6.exe driver.c ../importc-sljit/sljit_src/sljitLir.c shims6.obj sljitTest6.obj
+          echo "build exit=$?"
+          ./driver6.exe -v
+          echo "run exit=$?"
+        # Finer per-call granularity from test11 through test29, since the
+        # previous run showed test11 completing entirely (including its own
+        # internal checkpoints) yet the overall exit was still 127 - the
+        # crash point may vary between runs (ASLR / JIT memory layout
+        # dependent), so this checks how far this specific run actually gets.
         # sljitMain.c is unmodified and just calls sljit_test() directly, so
         # this diagnostic driver (not part of the real build, just for
         # narrowing this down) does the exact same call but with explicit
