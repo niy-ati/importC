@@ -180,6 +180,26 @@ jobs:
         # checked). This shows the real context: inline/forceinline wrapper,
         # macro, or something version-gated.
 
+      - name: Search every lib on the runner for MapViewOfFileNuma2 specifically
+        shell: pwsh
+        run: |
+          $libDirs = @(
+            "C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64",
+            "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.51.36231\lib\x64"
+          )
+          foreach ($d in $libDirs) {
+            Get-ChildItem -Path $d -Filter *.lib -ErrorAction SilentlyContinue | ForEach-Object {
+              $hits = & dumpbin /linkermember:1 $_.FullName 2>$null | Select-String -Pattern "MapViewOfFileNuma2"
+              if ($hits) { "$($_.Name): $hits" }
+            }
+          }
+        # WINBASEAPI/WINAPI in memoryapi.h means this one really is a normal
+        # dllimport kernel32 export, unlike the other 3 (plain extern, no
+        # import annotation at all - those are MSVC-recognized pseudo-
+        # intrinsics that real cl.exe never actually links either). Scanning
+        # every .lib on the runner by actual export name, not just the 6
+        # obvious candidates, since /symbols alone found nothing in kernel32.lib.
+
       - name: Read the full context around each declaration
         shell: pwsh
         run: |
