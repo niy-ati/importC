@@ -192,6 +192,47 @@ jobs:
         # breaks, the issue is in sljitLir.c's own module init, not
         # anything about calling sljit_test() or the other test files.
 
+      - name: Call sljit_test() from a diagnostic driver with explicit flushes
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          mkdir -p sljit-test
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitTest.c" -o sljit-test/sljitTest.c
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitTestBuffers.h" -o sljit-test/sljitTestBuffers.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitTestCall.h" -o sljit-test/sljitTestCall.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitTestFloat.h" -o sljit-test/sljitTestFloat.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitTestSerialize.h" -o sljit-test/sljitTestSerialize.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitTestSimd.h" -o sljit-test/sljitTestSimd.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitConfigPre.h" -o sljit-test/sljitConfigPre.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/sljitConfigPost.h" -o sljit-test/sljitConfigPost.h
+          mkdir -p mainrepro3 && cd mainrepro3
+          printf '%s\n' \
+            '#include <stdio.h>' \
+            'int sljit_test(int argc, char* argv[]);' \
+            'int main(int argc, char* argv[]) {' \
+            '    printf("before sljit_test\n"); fflush(stdout);' \
+            '    int r = sljit_test(argc, argv);' \
+            '    printf("after sljit_test, r=%d\n", r); fflush(stdout);' \
+            '    return r;' \
+            '}' > driver.c
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/I../importc-sljit/sljit_src -P=-DWIN32_LEAN_AND_MEAN -I../importc-sljit/sljit_src -I../sljit-test"
+          "$DMD" $CFLAGS -c -ofshims3.obj ../importc-sljit/sljit_src/msvc_intrinsic_shims.c
+          "$DMD" $CFLAGS -allinst -c -ofsljitTest3.obj ../sljit-test/sljitTest.c
+          "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -ofdriver.exe driver.c ../importc-sljit/sljit_src/sljitLir.c shims3.obj sljitTest3.obj
+          echo "build exit=$?"
+          ./driver.exe -v
+          echo "run exit=$?"
+        # sljitMain.c is unmodified and just calls sljit_test() directly, so
+        # this diagnostic driver (not part of the real build, just for
+        # narrowing this down) does the exact same call but with explicit
+        # fflush before and after. If "before" never prints, main() itself
+        # or process startup is the problem. If "before" prints but "after"
+        # never does, the crash is genuinely inside sljit_test()'s own 138
+        # tests somewhere.
+
       - name: Check which actual .lib exports the 4 remaining symbols
         shell: pwsh
         run: |
