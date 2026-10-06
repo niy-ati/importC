@@ -374,7 +374,12 @@ jobs:
           "$DMD" $CFLAGS -allinst -c -ofsljitMain.obj sljit-test/sljitMain.c
           "$DMD" $CFLAGS -allinst -c -ofsljitTest.obj sljit-test/sljitTest.c
           "$DMD" -m64 -L/DEFAULTLIB:mincore.lib -ofsljit-test/sljit-test-suite.exe shims.obj sljitLir.obj sljitMain.obj sljitTest.obj
+          ls -la sljit-test/sljit-test-suite.exe
+          file sljit-test/sljit-test-suite.exe || true
+          set +e
           ./sljit-test/sljit-test-suite.exe -s
+          echo "test exe exit=$?"
+          set -e
         # Milestone 1: "confirm its own JIT test suite runs unmodified from D".
         # sljit_test() returns TEST_COUNT - successful_tests, so a 0 exit
         # code here means every one of its 138 tests genuinely passed.
