@@ -169,6 +169,36 @@ jobs:
         # object compiled from C, then linked into a separate D executable.
         # A single-file link doesn't reproduce the real failure.
 
+      - name: Minimal repro, several different intrinsics in one file
+        shell: bash
+        run: |
+          mkdir -p minrepro2 && cd minrepro2
+          printf '%s\n' \
+            '#include <importc_msvc_builtins.h>' \
+            '' \
+            'void test(int a[static 4], unsigned long long *hi) {' \
+            '    __cpuidex(a, 0, 0);' \
+            '    unsigned long long x = _xgetbv(0);' \
+            '    unsigned long long lo = _umul128(2, 3, hi);' \
+            '    _InterlockedExchangeAdd64((long long*)hi, 1);' \
+            '    _ReadWriteBarrier();' \
+            '    a[0] = (int)(x + lo);' \
+            '}' > test.c
+          printf '%s\n' \
+            'extern(C) void test(int* a, ulong* hi);' \
+            'void main() { int[4] a; ulong hi; test(a.ptr, &hi); }' > main.d
+          cat test.c
+          cat main.d
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -lib -P=-DWIN32_LEAN_AND_MEAN -oftest.lib test.c
+          echo "library build exit=$?"
+          "$DMD" -m64 -oftest.exe main.d test.lib
+          echo "link exit=$?"
+        # Same two-stage shape as the previous repro, but calling several
+        # different MSVC intrinsics from one file instead of just __cpuidex,
+        # to test whether it's the combination/volume of distinct intrinsics
+        # in one translation unit that breaks, not any single one alone.
+
       - name: Compile sljitLir.obj
         shell: bash
         working-directory: importc-sljit
