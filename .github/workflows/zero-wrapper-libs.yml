@@ -225,6 +225,43 @@ jobs:
           echo "build exit=$?"
           ./driver.exe -v
           echo "run exit=$?"
+
+      - name: Bisect which call inside sljit_test() actually crashes
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          sed -i \
+            -e 's/^\ttest_exec_allocator();/\ttest_exec_allocator(); printf("ckpt: after exec_allocator\\n"); fflush(stdout);/' \
+            -e 's/^\ttest_macros();/\ttest_macros(); printf("ckpt: after macros\\n"); fflush(stdout);/' \
+            -e 's/^\ttest10();/\ttest10(); printf("ckpt: after test10\\n"); fflush(stdout);/' \
+            -e 's/^\ttest30();/\ttest30(); printf("ckpt: after test30\\n"); fflush(stdout);/' \
+            -e 's/^\ttest50();/\ttest50(); printf("ckpt: after test50\\n"); fflush(stdout);/' \
+            -e 's/^\ttest82();/\ttest82(); printf("ckpt: after test82\\n"); fflush(stdout);/' \
+            -e 's/^\ttest_call13();/\ttest_call13(); printf("ckpt: after call13\\n"); fflush(stdout);/' \
+            -e 's/^\t\ttest_float23();/\t\ttest_float23(); printf("ckpt: after float23\\n"); fflush(stdout);/' \
+            -e 's/^\t\tsuccessful_tests += 23;/\t\tsuccessful_tests += 23; printf("ckpt: fpu skipped\\n"); fflush(stdout);/' \
+            -e 's/^\t\ttest_simd11();/\t\ttest_simd11(); printf("ckpt: after simd11\\n"); fflush(stdout);/' \
+            -e 's/^\t\tsuccessful_tests += 11;/\t\tsuccessful_tests += 11; printf("ckpt: simd skipped\\n"); fflush(stdout);/' \
+            -e 's/^\ttest_serialize4();/\ttest_serialize4(); printf("ckpt: after serialize4\\n"); fflush(stdout);/' \
+            sljit-test/sljitTest.c
+          grep -c "ckpt:" sljit-test/sljitTest.c
+          mkdir -p mainrepro4 && cd mainrepro4
+          cp ../mainrepro3/driver.c .
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/I../importc-sljit/sljit_src -P=-DWIN32_LEAN_AND_MEAN -I../importc-sljit/sljit_src -I../sljit-test"
+          "$DMD" $CFLAGS -c -ofshims4.obj ../importc-sljit/sljit_src/msvc_intrinsic_shims.c
+          "$DMD" $CFLAGS -allinst -c -ofsljitTest4.obj ../sljit-test/sljitTest.c
+          "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -ofdriver4.exe driver.c ../importc-sljit/sljit_src/sljitLir.c shims4.obj sljitTest4.obj
+          echo "build exit=$?"
+          ./driver4.exe -v
+          echo "run exit=$?"
+        # Only sljitTest.c gets patched here, with checkpoint prints after
+        # each major block - this copy is for bisection only, separate from
+        # the real unmodified build used for the actual Milestone 1 step.
+        # Whichever checkpoint is the LAST one printed tells us exactly
+        # which block the crash is inside.
         # sljitMain.c is unmodified and just calls sljit_test() directly, so
         # this diagnostic driver (not part of the real build, just for
         # narrowing this down) does the exact same call but with explicit
