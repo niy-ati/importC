@@ -375,6 +375,9 @@ jobs:
             importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c shims.obj sljitTest.obj
           ls -la sljit-test/sljit-test-suite.exe
           file sljit-test/sljit-test-suite.exe || true
+          find . -iname "*.dll" 2>/dev/null
+          cmd //c "sljit-test\sljit-test-suite.exe -s"
+          echo "cmd exit=$?"
           ./sljit-test/sljit-test-suite.exe -s
         # Only sljitTest.c (the one whose own "union executable_code" clashes
         # with sljitMain.c's differently-shaped one of the same name) gets
