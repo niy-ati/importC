@@ -365,7 +365,7 @@ jobs:
           MSYS_NO_PATHCONV: 1
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          "$DMD" -m64 -release -O -allinst -P=/FIimportc_msvc_builtins.h -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
+          "$DMD" -m64 -release -O -allinst -P=/FIimportc_msvc_builtins.h -L/DEFAULTLIB:mincore.lib -Iimportc-sljit/sljit_src -Isljit-test -ofsljit-test/sljit-test-suite.exe \
             importc-sljit/sljit_src/sljitLir.c importc-sljit/sljit_src/msvc_intrinsic_shims.c sljit-test/sljitMain.c sljit-test/sljitTest.c
           ./sljit-test/sljit-test-suite.exe -s
         # Milestone 1: "confirm its own JIT test suite runs unmodified from D".

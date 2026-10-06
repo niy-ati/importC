@@ -6,5 +6,5 @@
     "sourceFiles-windows": ["sljit_src/sljitLir.c", "sljit_src/msvc_intrinsic_shims.c"],
     "importPaths": ["sljit_src"],
     "dflags-linux": ["-P=-fcf-protection=none"],
-    "dflags-windows": ["-P=-DWIN32_LEAN_AND_MEAN", "-P=/FIimportc_msvc_builtins.h"]
+    "dflags-windows": ["-P=-DWIN32_LEAN_AND_MEAN", "-P=/FIimportc_msvc_builtins.h", "-L/DEFAULTLIB:mincore.lib"]
 }
