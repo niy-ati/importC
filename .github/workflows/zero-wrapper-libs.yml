@@ -741,6 +741,26 @@ jobs:
         # whether optimized codegen specifically is what triggers the
         # corruption cdb caught, before investigating anything deeper.
 
+      - name: Build the same test suite with real cl.exe, no D or ImportC at all
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          cl.exe /nologo /std:c11 /O2 /Fe:sljit-test/sljit-test-suite-native.exe \
+            importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c sljit-test/sljitTest.c \
+            /link mincore.lib
+          echo "native build exit=$?"
+          ./sljit-test/sljit-test-suite-native.exe -v
+          echo "native run exit=$?"
+        # The decisive baseline test: the exact same sljit source, compiled
+        # by the real Microsoft compiler directly, completely bypassing D
+        # and ImportC. If this ALSO crashes, the bug is in sljit itself or
+        # this environment, not in ImportC's codegen. If this runs clean,
+        # it proves the corruption is specific to how dmd's ImportC
+        # translates this C code to machine code - a precise, actionable,
+        # upstream-reportable finding either way.
+
   sljit-windows-asan:
     runs-on: windows-latest
     steps:
