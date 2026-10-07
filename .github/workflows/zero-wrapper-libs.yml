@@ -745,6 +745,12 @@ jobs:
           echo "LDC_DIR=$LDC_DIR"
           find "$LDC_DIR" -iname "importc_msvc_builtins.h" 2>/dev/null
           find "$LDC_DIR" -iname "importc.h" 2>/dev/null
+          cat "$LDC_DIR/import/importc.h" 2>/dev/null
+          find "$LDC_DIR" -iname "*msvc*" 2>/dev/null
+          find "$LDC_DIR" -iname "__builtins*" 2>/dev/null
+          ldc2 --version 2>&1 | head -3
+          echo "ldc frontend check:"
+          find "$LDC_DIR" -iname "*.d" -path "*druntime*" | xargs grep -l "__cpuidex" 2>/dev/null
         # LDC uses clang-cl's own preprocessor, not cl.exe, and my dmd-style
         # /FI and /I flags failed with "file not found" - LDC ships its own
         # druntime, so this header likely lives in a different relative
