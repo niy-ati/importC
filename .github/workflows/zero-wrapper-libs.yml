@@ -746,7 +746,7 @@ jobs:
           ldc2 --version
           ldc2 -m64 -O -g -c -of=builtins_msvc.obj ldc-msvc-builtins/__builtins_msvc.d
           echo "builtins build exit=$?"
-          CFLAGS="-m64 -O -g -P=-DWIN32_LEAN_AND_MEAN -P=-Iimportc-sljit/sljit_src -P=-Isljit-test -P=/FIimportc_msvc_builtins.h -P=-Ildc-msvc-builtins -Iimportc-sljit/sljit_src -Isljit-test -fsanitize=address"
+          CFLAGS="-m64 -O -g -P=-DWIN32_LEAN_AND_MEAN -P=-Iimportc-sljit/sljit_src -P=-Isljit-test -P=/FIimportc_msvc_builtins.h -P=-Ildc-msvc-builtins -Iimportc-sljit/sljit_src -Isljit-test -Ildc-msvc-builtins -fsanitize=address"
           ldc2 $CFLAGS -c -of=shims_asan.obj importc-sljit/sljit_src/msvc_intrinsic_shims.c
           ldc2 $CFLAGS -allinst -c -of=sljitTest_asan.obj sljit-test/sljitTest.c
           ldc2 $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -of=testsuite_asan.exe importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c shims_asan.obj sljitTest_asan.obj builtins_msvc.obj
