@@ -750,7 +750,7 @@ jobs:
           printf '%s\n' \
             '#include <importc_msvc_builtins.h>' \
             '' \
-            'void test(int a[static 4]) {' \
+            'void test(int *a) {' \
             '    __cpuidex(a, 0, 0);' \
             '}' > test.c
           printf '%s\n' \
