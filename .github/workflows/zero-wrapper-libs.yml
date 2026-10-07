@@ -747,7 +747,7 @@ jobs:
         env:
           MSYS_NO_PATHCONV: 1
         run: |
-          cl.exe /nologo /std:c11 /O2 /Fe:sljit-test/sljit-test-suite-native.exe \
+          cl.exe /nologo /std:c11 /O2 /Iimportc-sljit/sljit_src /Isljit-test /Fe:sljit-test/sljit-test-suite-native.exe \
             importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c sljit-test/sljitTest.c \
             /link mincore.lib
           echo "native build exit=$?"
