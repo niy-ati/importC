@@ -763,10 +763,12 @@ jobs:
         run: |
           which ldc2
           ldc2 --version
-          CFLAGS="-m64 -O -g -P=-DWIN32_LEAN_AND_MEAN -P=-Iimportc-sljit/sljit_src -P=-Isljit-test -Iimportc-sljit/sljit_src -Isljit-test -fsanitize=address"
+          ldc2 -m64 -O -g -c -of=builtins_msvc.obj ldc-msvc-builtins/__builtins_msvc.d
+          echo "builtins build exit=$?"
+          CFLAGS="-m64 -O -g -P=-DWIN32_LEAN_AND_MEAN -P=-Iimportc-sljit/sljit_src -P=-Isljit-test -P=/FIimportc_msvc_builtins.h -P=-Ildc-msvc-builtins -Iimportc-sljit/sljit_src -Isljit-test -fsanitize=address"
           ldc2 $CFLAGS -c -of=shims_asan.obj importc-sljit/sljit_src/msvc_intrinsic_shims.c
           ldc2 $CFLAGS -allinst -c -of=sljitTest_asan.obj sljit-test/sljitTest.c
-          ldc2 $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -of=testsuite_asan.exe importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c shims_asan.obj sljitTest_asan.obj
+          ldc2 $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -of=testsuite_asan.exe importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c shims_asan.obj sljitTest_asan.obj builtins_msvc.obj
           echo "build exit=$?"
           ./testsuite_asan.exe -v
           echo "run exit=$?"
@@ -778,6 +780,12 @@ jobs:
         # LLVM-based; dmd has no equivalent flag, which is why this needs
         # its own job with the LDC compiler instead of the dmd-from-source
         # build the rest of this workflow uses.
+        # LDC's own druntime has no equivalent of dmd's MSVC-intrinsic
+        # redirect at all (confirmed empty grep for __cpuidex across its
+        # whole druntime source) - ldc-msvc-builtins/ is dmd's real,
+        # already-working __builtins_msvc.d and its header, copied in and
+        # compiled as plain D (no ImportC involved for that file), force-
+        # included and linked the same way dmd's own build does it.
 
   zlib:
     needs: build-dmd
