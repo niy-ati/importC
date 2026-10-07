@@ -383,6 +383,27 @@ jobs:
         # trace (kb 20), and !analyze -v's automatic crash summary, before
         # quitting. This is what actually answers Nicholas's question.
 
+      - name: Retry with a larger linked stack size
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          cd sljit-test7
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/I../importc-sljit/sljit_src -P=-DWIN32_LEAN_AND_MEAN -I../importc-sljit/sljit_src -I."
+          "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -L/STACK:8388608 -oftestsuite_bigstack.exe ../importc-sljit/sljit_src/sljitLir.c sljitMain.c shims7.obj sljitTest7.obj
+          echo "build exit=$?"
+          ./testsuite_bigstack.exe -v
+          echo "run exit=$?"
+        # cdb's crash analysis came back as a real STATUS_STACK_OVERFLOW
+        # (0xc00000fd), "a new guard page for the stack cannot be created" -
+        # genuine thread stack exhaustion, not corruption at a fixed spot.
+        # That explains the non-determinism: all 138 tests share one
+        # thread, so cumulative stack usage varies slightly run to run,
+        # and exhaustion hits wherever that happens to land. The real fix
+        # is a bigger linked stack via /STACK, not finding "the bad line".
+
       - name: Checkpoint every test call from test11 through test29
         shell: bash
         continue-on-error: true
