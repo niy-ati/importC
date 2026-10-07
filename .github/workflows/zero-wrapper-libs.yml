@@ -746,6 +746,23 @@ jobs:
           ldc2 --version
           ldc2 -m64 -O -g -c -of=builtins_msvc.obj ldc-msvc-builtins/__builtins_msvc.d
           echo "builtins build exit=$?"
+          mkdir -p minrepro_ldc && cd minrepro_ldc
+          printf '%s\n' \
+            '#include <importc_msvc_builtins.h>' \
+            '' \
+            'void test(int a[static 4]) {' \
+            '    __cpuidex(a, 0, 0);' \
+            '}' > test.c
+          printf '%s\n' \
+            'extern(C) void test(int* a);' \
+            'void main() { int[4] a; test(a.ptr); }' > main.d
+          set +e
+          ldc2 -m64 -P=-I../ldc-msvc-builtins -P=/FIimportc_msvc_builtins.h -I../ldc-msvc-builtins -c -of=test.obj test.c
+          echo "minimal repro compile exit=$?"
+          ldc2 -m64 -I../ldc-msvc-builtins -of=test.exe main.d test.obj ../builtins_msvc.obj
+          echo "minimal repro link exit=$?"
+          set -e
+          cd ..
           CFLAGS="-m64 -O -g -P=-DWIN32_LEAN_AND_MEAN -P=-Iimportc-sljit/sljit_src -P=-Isljit-test -P=/FIimportc_msvc_builtins.h -P=-Ildc-msvc-builtins -Iimportc-sljit/sljit_src -Isljit-test -Ildc-msvc-builtins -fsanitize=address"
           ldc2 $CFLAGS -c -of=shims_asan.obj importc-sljit/sljit_src/msvc_intrinsic_shims.c
           ldc2 $CFLAGS -allinst -c -of=sljitTest_asan.obj sljit-test/sljitTest.c
