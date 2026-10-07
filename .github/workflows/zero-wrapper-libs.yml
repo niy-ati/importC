@@ -720,6 +720,26 @@ jobs:
         # sljit_test() returns TEST_COUNT - successful_tests, so a 0 exit
         # code here means every one of its 138 tests genuinely passed.
 
+      - name: Retry the same build without optimization
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          CFLAGS="-m64 -P=/FIimportc_msvc_builtins.h -P=/Iimportc-sljit/sljit_src -Iimportc-sljit/sljit_src -Isljit-test"
+          "$DMD" $CFLAGS -c -ofshims_noopt.obj importc-sljit/sljit_src/msvc_intrinsic_shims.c
+          "$DMD" $CFLAGS -allinst -c -ofsljitTest_noopt.obj sljit-test/sljitTest.c
+          "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -ofsljit-test/sljit-test-suite-noopt.exe \
+            importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c shims_noopt.obj sljitTest_noopt.obj
+          echo "build exit=$?"
+          ./sljit-test/sljit-test-suite-noopt.exe -v
+          echo "run exit=$?"
+        # Nicholas: "simple and reliable is better than fancy that doesn't
+        # work." Same real build, just without -release -O, to check
+        # whether optimized codegen specifically is what triggers the
+        # corruption cdb caught, before investigating anything deeper.
+
   sljit-windows-asan:
     runs-on: windows-latest
     steps:
