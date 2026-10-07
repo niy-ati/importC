@@ -339,6 +339,20 @@ jobs:
         # tells us exactly which sljit API call the crash happens inside or
         # right after.
 
+      - name: Check whether a real debugger is available on the runner
+        shell: pwsh
+        run: |
+          $cdb = Get-ChildItem -Path "C:\Program Files*\Windows Kits\10\Debuggers" -Recurse -Filter cdb.exe -ErrorAction SilentlyContinue
+          if ($cdb) { "found cdb.exe: $($cdb.FullName)" } else { "cdb.exe not found under Windows Kits" }
+          $windbg = Get-Command windbg -ErrorAction SilentlyContinue
+          if ($windbg) { "found windbg: $($windbg.Source)" } else { "windbg not on PATH" }
+          $ntsd = Get-ChildItem -Path "C:\Windows\System32" -Filter ntsd.exe -ErrorAction SilentlyContinue
+          if ($ntsd) { "found ntsd.exe: $($ntsd.FullName)" } else { "ntsd.exe not found" }
+        # Nicholas's own question (has this been caught in a debugger) is
+        # the right next step - printf bisection can't reliably localize
+        # non-deterministic corruption. Checking what's actually available
+        # on this runner before deciding how to get a real stack trace.
+
       - name: Checkpoint every test call from test11 through test29
         shell: bash
         continue-on-error: true
