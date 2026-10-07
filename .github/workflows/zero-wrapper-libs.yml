@@ -202,6 +202,38 @@ jobs:
         # reproduce the exact same silent crash, completely independent of
         # sljit.
 
+      - name: Does writing directly to a deep stack offset skip the guard page
+        shell: bash
+        continue-on-error: true # exit 98 here is success, not a failure
+        run: |
+          mkdir -p stackrepro2 && cd stackrepro2
+          printf '%s\n' \
+            '#include <stdio.h>' \
+            'static void deep_frame(void) {' \
+            '    char buf[65536];' \
+            '    buf[65535] = 7;' \
+            '    printf("deep write landed, buf[65535]=%d\n", buf[65535]);' \
+            '    fflush(stdout);' \
+            '}' \
+            'int main(void) {' \
+            '    printf("before deep_frame\n"); fflush(stdout);' \
+            '    deep_frame();' \
+            '    printf("after deep_frame\n"); fflush(stdout);' \
+            '    return 98;' \
+            '}' > stacktest2.c
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -release -O -ofstacktest2.exe stacktest2.c
+          echo "build exit=$?"
+          ./stacktest2.exe
+          echo "run exit=$?"
+        # Nicholas's correction: the earlier big_frame test called memset()
+        # over the whole buffer before ever touching the far end, which
+        # sequentially touches every page on the way - accidentally
+        # "probing" each one even without a real _chkstk call. This test
+        # writes directly to the single byte at the far end of a 64KB
+        # (16-page) buffer with nothing touched before it, actually
+        # exercising the case a missing stack probe would break.
+
       - name: Does linking sljitLir.c itself break a trivial main that never calls it
         shell: bash
         continue-on-error: true # exit 7 here is success, not a failure
