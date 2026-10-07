@@ -757,9 +757,9 @@ jobs:
             'extern(C) void test(int* a);' \
             'void main() { int[4] a; test(a.ptr); }' > main.d
           set +e
-          ldc2 -m64 -P=-I../ldc-msvc-builtins -P=/FIimportc_msvc_builtins.h -I../ldc-msvc-builtins -c -of=test.obj test.c
+          ldc2 -m64 -allinst -P=-I../ldc-msvc-builtins -P=/FIimportc_msvc_builtins.h -I../ldc-msvc-builtins -c -of=test.obj test.c
           echo "minimal repro compile exit=$?"
-          ldc2 -m64 -I../ldc-msvc-builtins -of=test.exe main.d test.obj ../builtins_msvc.obj
+          ldc2 -m64 -allinst -I../ldc-msvc-builtins -of=test.exe main.d test.obj ../builtins_msvc.obj
           echo "minimal repro link exit=$?"
           set -e
           cd ..
