@@ -782,19 +782,20 @@ jobs:
             'int main(void) {' \
             '    int i;' \
             '    for (i = 0; i < 200; i++) {' \
-            '        union { void *code; sljit_sw (SLJIT_FUNC *func)(sljit_sw); } code;' \
+            '        union { void *code; sljit_sw (SLJIT_FUNC *func)(void); } code;' \
             '        struct sljit_compiler *compiler = sljit_create_compiler(NULL);' \
-            '        if (!compiler) { printf("iter %d: no compiler\\n", i); return 1; }' \
-            '        sljit_emit_enter(compiler, 0, SLJIT_ARGS1(W, W), 2, 1, 0);' \
-            '        sljit_emit_return(compiler, SLJIT_MOV, SLJIT_R0, 0);' \
+            '        if (!compiler) { printf("iter %d: no compiler\n", i); return 1; }' \
+            '        sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 2, 1, 0);' \
+            '        sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0, SLJIT_IMM, 42);' \
+            '        sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);' \
             '        code.code = sljit_generate_code(compiler, 0, NULL);' \
             '        sljit_free_compiler(compiler);' \
-            '        if (!code.code) { printf("iter %d: no code\\n", i); return 1; }' \
-            '        if (code.func(7) != 7) { printf("iter %d: wrong result\\n", i); return 1; }' \
+            '        if (!code.code) { printf("iter %d: no code\n", i); return 1; }' \
+            '        if (code.func() != 42) { printf("iter %d: wrong result\n", i); return 1; }' \
             '        sljit_free_code(code.code, NULL);' \
-            '        if (i % 20 == 0) { printf("iter %d ok\\n", i); fflush(stdout); }' \
+            '        if (i % 20 == 0) { printf("iter %d ok\n", i); fflush(stdout); }' \
             '    }' \
-            '    printf("all 200 iterations ok\\n");' \
+            '    printf("all 200 iterations ok\n");' \
             '    return 0;' \
             '}' > reduce1.c
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
