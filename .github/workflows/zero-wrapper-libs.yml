@@ -812,6 +812,68 @@ jobs:
         # showing heap/allocator-related ntdll functions) repeated enough
         # times under ImportC-generated code. That would be a genuinely
         # minimal, dmd-actionable repro.
+        # Result: all 200 iterations passed clean, so generic JIT churn
+        # alone isn't the trigger - it needs something more specific from
+        # the real test content.
+
+      - name: Reduce further - loop sljit_emit_const/sljit_set_const specifically
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          mkdir -p reduce2 && cd reduce2
+          printf '%s\n' \
+            '#include "sljitLir.h"' \
+            '#include <stdio.h>' \
+            '' \
+            'void *sljit_test_malloc_exec(sljit_uw size, void *exec_allocator_data) {' \
+            '    return SLJIT_BUILTIN_MALLOC_EXEC(size, exec_allocator_data);' \
+            '}' \
+            'void sljit_test_free_code(void *code, void *exec_allocator_data) {' \
+            '    SLJIT_BUILTIN_FREE_EXEC(code, exec_allocator_data);' \
+            '}' \
+            '' \
+            'int main(void) {' \
+            '    int i;' \
+            '    for (i = 0; i < 200; i++) {' \
+            '        union { void *code; sljit_sw (SLJIT_FUNC *func)(void); } code;' \
+            '        struct sljit_compiler *compiler = sljit_create_compiler(NULL);' \
+            '        struct sljit_const *c;' \
+            '        sljit_uw addr;' \
+            '        sljit_sw executable_offset;' \
+            '        if (!compiler) { printf("iter %d: no compiler\n", i); return 1; }' \
+            '        sljit_emit_enter(compiler, 0, SLJIT_ARGS0(W), 2, 1, 0);' \
+            '        c = sljit_emit_const(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0, 11);' \
+            '        sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);' \
+            '        code.code = sljit_generate_code(compiler, 0, NULL);' \
+            '        executable_offset = sljit_get_executable_offset(compiler);' \
+            '        addr = sljit_get_const_addr(c);' \
+            '        sljit_free_compiler(compiler);' \
+            '        if (!code.code) { printf("iter %d: no code\n", i); return 1; }' \
+            '        if (code.func() != 11) { printf("iter %d: wrong initial result\n", i); return 1; }' \
+            '        sljit_set_const(addr, SLJIT_MOV, 42, executable_offset);' \
+            '        if (code.func() != 42) { printf("iter %d: wrong patched result\n", i); return 1; }' \
+            '        sljit_free_code(code.code, NULL);' \
+            '        if (i % 20 == 0) { printf("iter %d ok\n", i); fflush(stdout); }' \
+            '    }' \
+            '    printf("all 200 iterations ok\n");' \
+            '    return 0;' \
+            '}' > reduce2.c
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/I../importc-sljit/sljit_src -P=/I../sljit-test -P=-DSLJIT_HAVE_CONFIG_PRE=1 -I../importc-sljit/sljit_src -I../sljit-test"
+          "$DMD" $CFLAGS -c -of=shims_r2.obj ../importc-sljit/sljit_src/msvc_intrinsic_shims.c
+          "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -L/STACK:0x400000 -of=reduce2.exe reduce2.c ../importc-sljit/sljit_src/sljitLir.c shims_r2.obj
+          echo "build exit=$?"
+          ./reduce2.exe
+          echo "run exit=$?"
+        # test11 (the first test earlier bisection runs showed crashing
+        # inconsistently) is sljit's own first use of rewritable constants,
+        # emitting a const, running the code, then patching the const's
+        # value in already-generated memory and running again. That write-
+        # after-generate pattern touches the executable memory region a
+        # second time after sljit_generate_code, unlike the plain loop
+        # above - testing whether that specific pattern is the trigger.
 
   sljit-windows-asan:
     runs-on: windows-latest
