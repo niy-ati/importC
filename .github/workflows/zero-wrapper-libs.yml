@@ -798,7 +798,7 @@ jobs:
             '    return 0;' \
             '}' > reduce1.c
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/I../importc-sljit/sljit_src -P=-DSLJIT_HAVE_CONFIG_PRE=1 -I../importc-sljit/sljit_src -I../sljit-test"
+          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/I../importc-sljit/sljit_src -P=/I../sljit-test -P=-DSLJIT_HAVE_CONFIG_PRE=1 -I../importc-sljit/sljit_src -I../sljit-test"
           "$DMD" $CFLAGS -c -of=shims_r1.obj ../importc-sljit/sljit_src/msvc_intrinsic_shims.c
           "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -L/STACK:0x400000 -of=reduce1.exe reduce1.c ../importc-sljit/sljit_src/sljitLir.c shims_r1.obj
           echo "build exit=$?"
