@@ -923,6 +923,13 @@ jobs:
           cp sljitTest.c target/
           cp msvc_intrinsic_shims.c target/
           cp sljitLir.h target/
+          cp ../sljit-test/sljitConfigPre.h target/
+          cp ../sljit-test/sljitConfigPost.h target/
+          cp ../sljit-test/sljitTestBuffers.h target/
+          cp ../sljit-test/sljitTestCall.h target/
+          cp ../sljit-test/sljitTestFloat.h target/
+          cp ../sljit-test/sljitTestSerialize.h target/
+          cp ../sljit-test/sljitTestSimd.h target/
           BUILTINS_DIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src/include")
           cp "$(cygpath -u "$BUILTINS_DIR")/importc_msvc_builtins.h" target/
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
