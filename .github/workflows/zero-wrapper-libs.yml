@@ -909,6 +909,48 @@ jobs:
         # before reduction even starts, which should help dustmite handle
         # it even if it can't parse raw ImportC-flavoured C well on its own.
 
+      - name: Run DustMite reduction, bounded to one CI-sized pass
+        shell: bash
+        continue-on-error: true
+        timeout-minutes: 20
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          cd reduce3
+          mkdir -p target
+          cp sljitLir_reduced.c target/
+          cp sljitMain.c target/
+          cp sljitTest.c target/
+          cp msvc_intrinsic_shims.c target/
+          cp sljitLir.h target/
+          BUILTINS_DIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src/include")
+          cp "$(cygpath -u "$BUILTINS_DIR")/importc_msvc_builtins.h" target/
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          printf '%s\r\n' \
+            '@echo off' \
+            "\"$DMD\" -m64 -allinst -P=/I. -P=/FIimportc_msvc_builtins.h -DSLJIT_HAVE_CONFIG_PRE=1 -L/DEFAULTLIB:mincore.lib -L/STACK:0x400000 -ofout.exe sljitLir_reduced.c sljitMain.c sljitTest.c msvc_intrinsic_shims.c >nul 2>nul" \
+            'if errorlevel 1 exit /b 1' \
+            'out.exe -v >nul 2>nul' \
+            'set RC=%errorlevel%' \
+            'if %RC% LSS 0 exit /b 0' \
+            'if %RC% GTR 138 exit /b 0' \
+            'exit /b 1' > target/test.cmd
+          cat target/test.cmd
+          ./dustmite.exe target test.cmd
+          echo "dustmite exit=$?"
+          wc -l target/sljitLir_reduced.c
+          ls -la target/
+        # DustMite copies "target" and repeatedly tries shrinking files in
+        # it, keeping any change where test.cmd still exits 0 (our crash
+        # signature: the real run exit code falls outside the legitimate
+        # 0-138 "N tests failed" range - covers both the raw NT stack-
+        # overflow code and anything git-bash remaps, since cmd.exe exposes
+        # the unmapped %errorlevel% directly).
+        # 208K preprocessed lines means one 20-minute CI pass only makes
+        # partial progress - the point today is confirming the pipeline
+        # actually works and reduces something real, not finishing the
+        # full reduction in one run. Can resume with --state on a later run.
+
   sljit-windows-asan:
     runs-on: windows-latest
     steps:
