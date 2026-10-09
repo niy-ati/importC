@@ -922,7 +922,7 @@ jobs:
           cp sljitMain.c target/
           cp sljitTest.c target/
           cp msvc_intrinsic_shims.c target/
-          cp sljitLir.h target/
+          cp ../importc-sljit/sljit_src/*.h target/
           cp ../sljit-test/sljitConfigPre.h target/
           cp ../sljit-test/sljitConfigPost.h target/
           cp ../sljit-test/sljitTestBuffers.h target/
