@@ -894,13 +894,14 @@ jobs:
           cp ../sljit-test/sljitTest.c .
           cp ../importc-sljit/sljit_src/msvc_intrinsic_shims.c .
           cp ../importc-sljit/sljit_src/sljitLir.h .
-          export GIT_TERMINAL_PROMPT=0
-          rm -rf dustmite_src
-          git -c credential.helper= clone --depth 1 https://github.com/dlang-community/DustMite.git dustmite_src
-          echo "clone exit=$?"
-          ls dustmite_src/*.d
+          mkdir -p dustmite_src && cd dustmite_src
+          curl -sL "https://raw.githubusercontent.com/CyberShadow/DustMite/master/dustmite.d" -o dustmite.d
+          curl -sL "https://raw.githubusercontent.com/CyberShadow/DustMite/master/polyhash.d" -o polyhash.d
+          curl -sL "https://raw.githubusercontent.com/CyberShadow/DustMite/master/splitter.d" -o splitter.d
+          ls -la
+          cd ..
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          "$DMD" -m64 -of=dustmite.exe dustmite_src/dustmite.d
+          "$DMD" -m64 -of=dustmite.exe dustmite_src/dustmite.d dustmite_src/polyhash.d dustmite_src/splitter.d
           echo "dustmite build exit=$?"
           ls -la dustmite.exe || echo "dustmite did not build"
         # Nicholas's call: just try dustmite and see. Preprocessing sljitLir.c
