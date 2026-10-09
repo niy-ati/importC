@@ -883,7 +883,14 @@ jobs:
         run: |
           mkdir -p reduce3 && cd reduce3
           BUILTINS_DIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src/include")
-          PPFLAGS="/nologo /std:c11 /P /DWIN32_LEAN_AND_MEAN /DSLJIT_HAVE_CONFIG_PRE=1 /FI$BUILTINS_DIR\\importc_msvc_builtins.h /I$BUILTINS_DIR /I../importc-sljit/sljit_src /I../sljit-test"
+          # _NO_CRT_STDIO_INLINE skips the UCRT's __CRTDECL inline bodies
+          # for the wide-print family (_fwprintf_l etc). Those inline
+          # bodies call the compiler-intrinsic __va_start, which cl.exe's
+          # own front end recognizes and never actually emits as a call -
+          # once preprocessed into plain text, ImportC sees a bare
+          # unresolved external instead. Skipping the inline bodies keeps
+          # the preprocessed source using the real, linkable DLL imports.
+          PPFLAGS="/nologo /std:c11 /P /DWIN32_LEAN_AND_MEAN /D_NO_CRT_STDIO_INLINE=1 /DSLJIT_HAVE_CONFIG_PRE=1 /FI$BUILTINS_DIR\\importc_msvc_builtins.h /I$BUILTINS_DIR /I../importc-sljit/sljit_src /I../sljit-test"
           cl.exe $PPFLAGS ../importc-sljit/sljit_src/sljitLir.c
           echo "preprocess sljitLir exit=$?"
           cl.exe $PPFLAGS ../sljit-test/sljitMain.c
