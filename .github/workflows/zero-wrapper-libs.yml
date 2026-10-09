@@ -928,7 +928,7 @@ jobs:
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
           printf '%s\r\n' \
             '@echo off' \
-            "\"$DMD\" -m64 -allinst -P=/I. -P=/FIimportc_msvc_builtins.h -DSLJIT_HAVE_CONFIG_PRE=1 -L/DEFAULTLIB:mincore.lib -L/STACK:0x400000 -ofout.exe sljitLir_reduced.c sljitMain.c sljitTest.c msvc_intrinsic_shims.c >nul 2>nul" \
+            "\"$DMD\" -m64 -allinst -P=/I. -P=/FIimportc_msvc_builtins.h -P=-DSLJIT_HAVE_CONFIG_PRE=1 -L/DEFAULTLIB:mincore.lib -L/STACK:0x400000 -ofout.exe sljitLir_reduced.c sljitMain.c sljitTest.c msvc_intrinsic_shims.c >nul 2>nul" \
             'if errorlevel 1 exit /b 1' \
             'out.exe -v >nul 2>nul' \
             'set RC=%errorlevel%' \
@@ -936,6 +936,12 @@ jobs:
             'if %RC% GTR 138 exit /b 0' \
             'exit /b 1' > target/test.cmd
           cat target/test.cmd
+          echo "--- sanity check: running test.cmd once manually ---"
+          pushd target > /dev/null
+          cmd /c test.cmd
+          echo "manual test.cmd exit=$?"
+          popd > /dev/null
+          echo "--- handing off to dustmite ---"
           ./dustmite.exe target test.cmd
           echo "dustmite exit=$?"
           wc -l target/sljitLir_reduced.c
