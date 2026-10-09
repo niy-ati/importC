@@ -875,6 +875,37 @@ jobs:
         # second time after sljit_generate_code, unlike the plain loop
         # above - testing whether that specific pattern is the trigger.
 
+      - name: Preprocess sljitLir.c with real cl.exe, then run DustMite on it
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          mkdir -p reduce3 && cd reduce3
+          BUILTINS_DIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src/include")
+          cl.exe /nologo /std:c11 /P /DWIN32_LEAN_AND_MEAN /DSLJIT_HAVE_CONFIG_PRE=1 \
+            "/FI$BUILTINS_DIR\\importc_msvc_builtins.h" "/I$BUILTINS_DIR" \
+            /I../importc-sljit/sljit_src /I../sljit-test \
+            ../importc-sljit/sljit_src/sljitLir.c
+          echo "preprocess exit=$?"
+          wc -l sljitLir.i
+          cp sljitLir.i sljitLir_reduced.c
+          cp ../sljit-test/sljitMain.c .
+          cp ../sljit-test/sljitTest.c .
+          cp ../importc-sljit/sljit_src/msvc_intrinsic_shims.c .
+          cp ../importc-sljit/sljit_src/sljitLir.h .
+          git clone --depth 1 https://github.com/dlang-community/DustMite.git /tmp/dustmite 2>&1 | tail -3 || \
+            git clone --depth 1 https://github.com/dlang-community/DustMite.git "$(cygpath -u "$TEMP")/dustmite" 2>&1 | tail -3
+          DUSTMITE_SRC=$(cygpath -u "$TEMP")/dustmite
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -of=dustmite.exe "$(cygpath -w "$DUSTMITE_SRC/dustmite.d")"
+          echo "dustmite build exit=$?"
+          ls -la dustmite.exe || echo "dustmite did not build"
+        # Nicholas's call: just try dustmite and see. Preprocessing sljitLir.c
+        # first with real cl.exe's /P removes macros and nested #includes
+        # before reduction even starts, which should help dustmite handle
+        # it even if it can't parse raw ImportC-flavoured C well on its own.
+
   sljit-windows-asan:
     runs-on: windows-latest
     steps:
