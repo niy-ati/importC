@@ -883,15 +883,17 @@ jobs:
         run: |
           mkdir -p reduce3 && cd reduce3
           BUILTINS_DIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src/include")
-          cl.exe /nologo /std:c11 /P /DWIN32_LEAN_AND_MEAN /DSLJIT_HAVE_CONFIG_PRE=1 \
-            "/FI$BUILTINS_DIR\\importc_msvc_builtins.h" "/I$BUILTINS_DIR" \
-            /I../importc-sljit/sljit_src /I../sljit-test \
-            ../importc-sljit/sljit_src/sljitLir.c
-          echo "preprocess exit=$?"
-          wc -l sljitLir.i
+          PPFLAGS="/nologo /std:c11 /P /DWIN32_LEAN_AND_MEAN /DSLJIT_HAVE_CONFIG_PRE=1 /FI$BUILTINS_DIR\\importc_msvc_builtins.h /I$BUILTINS_DIR /I../importc-sljit/sljit_src /I../sljit-test"
+          cl.exe $PPFLAGS ../importc-sljit/sljit_src/sljitLir.c
+          echo "preprocess sljitLir exit=$?"
+          cl.exe $PPFLAGS ../sljit-test/sljitMain.c
+          echo "preprocess sljitMain exit=$?"
+          cl.exe $PPFLAGS ../sljit-test/sljitTest.c
+          echo "preprocess sljitTest exit=$?"
+          wc -l sljitLir.i sljitMain.i sljitTest.i
           cp sljitLir.i sljitLir_reduced.c
-          cp ../sljit-test/sljitMain.c .
-          cp ../sljit-test/sljitTest.c .
+          cp sljitMain.i sljitMain.c
+          cp sljitTest.i sljitTest.c
           cp ../importc-sljit/sljit_src/msvc_intrinsic_shims.c .
           cp ../importc-sljit/sljit_src/sljitLir.h .
           mkdir -p dustmite_src && cd dustmite_src
@@ -904,9 +906,13 @@ jobs:
           "$DMD" -m64 -of=dustmite.exe dustmite_src/dustmite.d dustmite_src/polyhash.d dustmite_src/splitter.d
           echo "dustmite build exit=$?"
           ls -la dustmite.exe || echo "dustmite did not build"
-        # Nicholas's call: just try dustmite and see. Preprocessing sljitLir.c
-        # first with real cl.exe's /P removes macros and nested #includes
-        # before reduction even starts, which should help dustmite handle
+        # Nicholas's call: just try dustmite and see. Preprocessing all three
+        # files (not just sljitLir.c) with real cl.exe's /P removes macros
+        # and nested #includes before reduction even starts, and keeps
+        # every file's copy of the system headers' struct layouts frozen
+        # identically - preprocessing only sljitLir.c caused a real struct-
+        # packing mismatch against the other two files' fresh ImportC
+        # parse. This should help dustmite handle
         # it even if it can't parse raw ImportC-flavoured C well on its own.
 
       - name: Run DustMite reduction, bounded to one CI-sized pass
