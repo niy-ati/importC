@@ -972,8 +972,18 @@ jobs:
           echo "manual test.cmd exit=$?"
           popd > /dev/null
           set -e
+          # The sanity build above writes its outputs into target/ itself -
+          # clean those back out so DustMite doesn't load our own build
+          # artifacts as part of the source tree to reduce.
+          rm -f target/out.exe target/out.obj target/test_obj.obj
           echo "--- handing off to dustmite ---"
-          ./dustmite.exe target test.cmd
+          # Without --split, DustMite treats each .c/.h file as a single
+          # atomic leaf (can only be kept or removed whole) - it never
+          # looks inside it. --split *.{c,h}:d turns on its D-style
+          # brace/semicolon-aware splitter for these files, which is what
+          # actually lets it shrink the 200K-line reproduction instead of
+          # just shuffling whole files around.
+          ./dustmite.exe --split '*.{c,h}:d' target test.cmd
           echo "dustmite exit=$?"
           wc -l target/sljitLir_reduced.c
           ls -la target/
