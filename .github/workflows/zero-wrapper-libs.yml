@@ -985,8 +985,11 @@ jobs:
           # just shuffling whole files around.
           ./dustmite.exe --split '*.{c,h}:d' target test.cmd
           echo "dustmite exit=$?"
-          wc -l target/sljitLir_reduced.c
-          ls -la target/
+          # DustMite never modifies "target" in place - the actual reduced
+          # result lands in the sibling "target.reduced" directory. Checking
+          # target/ here was a bug: it always shows the untouched original.
+          wc -l target.reduced/sljitLir_reduced.c || echo "no target.reduced - dustmite made no changes at all"
+          ls -la target.reduced/ || true
         # DustMite copies "target" and repeatedly tries shrinking files in
         # it, keeping any change where test.cmd still exits 0 (our crash
         # signature: the real run exit code falls outside the legitimate
@@ -997,6 +1000,13 @@ jobs:
         # partial progress - the point today is confirming the pipeline
         # actually works and reduces something real, not finishing the
         # full reduction in one run. Can resume with --state on a later run.
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dustmite-reduced
+          path: reduce3/target.reduced
+          if-no-files-found: ignore
 
   sljit-windows-asan:
     runs-on: windows-latest
