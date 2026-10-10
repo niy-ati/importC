@@ -983,7 +983,14 @@ jobs:
           # brace/semicolon-aware splitter for these files, which is what
           # actually lets it shrink the 200K-line reproduction instead of
           # just shuffling whole files around.
-          ./dustmite.exe --split '*.{c,h}:d' target test.cmd
+          # test.cmd has to live inside target/ for dustmite to be able to
+          # run it against each candidate reduction, but that also puts it
+          # in the reducible tree - without --noremove, dustmite happily
+          # discovered that an EMPTY test.cmd exits 0 and is therefore
+          # "interesting", and reduced every real file away to nothing.
+          # Confirmed directly: the previous run's target.reduced/ had no
+          # source files left at all, just a 0-byte test.cmd.
+          ./dustmite.exe --split '*.{c,h}:d' --noremove 'test\.cmd' target test.cmd
           echo "dustmite exit=$?"
           # DustMite never modifies "target" in place - the actual reduced
           # result lands in the sibling "target.reduced" directory. Checking
