@@ -928,12 +928,11 @@ jobs:
         timeout-minutes: 20
         env:
           MSYS_NO_PATHCONV: 1
-          # TEMP: the last resume drifted into undefined-behavior noise
-          # (an empty sljit_test() body satisfying the loose >138 oracle).
-          # Skipping the actual dustmite call this run so we can read the
-          # real crash's raw errorlevel first and tighten the oracle before
-          # letting it touch the checkpoint again. Remove once that's done.
-          SKIP_DUSTMITE_THIS_RUN: 1
+          # Set to any non-empty value to probe the raw errorlevel without
+          # letting dustmite touch the checkpoint - used once to pin down
+          # the real crash's NTSTATUS-shaped exit code before tightening
+          # the oracle below.
+          SKIP_DUSTMITE_THIS_RUN: ""
         run: |
           cd reduce3
           mkdir -p target
@@ -974,9 +973,21 @@ jobs:
             'if errorlevel 1 exit /b 1' \
             'out.exe -v >nul 2>nul' \
             'set RC=%errorlevel%' \
-            'if %RC% LSS 0 exit /b 0' \
-            'if %RC% GTR 138 exit /b 0' \
-            'exit /b 1' > target/test.cmd
+            'if %RC% GEQ 0 exit /b 1' \
+            'if %RC% LSS -1073741824 exit /b 1' \
+            'exit /b 0' > target/test.cmd
+          # A legit run returns 0-138 (TEST_COUNT minus passes). The old
+          # "anything outside 0-138" rule was too loose - it let dustmite
+          # satisfy it by gutting sljit_test() to an empty body, whose
+          # undefined-behaviour garbage return (184, confirmed by reading
+          # the actual reduced file) happened to fall outside that range
+          # with no real crash at all. A genuine unhandled Windows
+          # exception always has NTSTATUS severity bits set (top 2 bits
+          # of the 32-bit code = Error), which as a signed int is exactly
+          # the range -1073741824..-1 - matches both known crash codes
+          # here (-1073741819 access violation, -1073741571 stack
+          # overflow) and rejects the 184 drift case and any other small
+          # garbage value.
           cat target/test.cmd
           echo "--- sanity check: raw build with real output first ---"
           set +e
