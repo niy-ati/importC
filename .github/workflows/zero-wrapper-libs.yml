@@ -928,6 +928,12 @@ jobs:
         timeout-minutes: 20
         env:
           MSYS_NO_PATHCONV: 1
+          # TEMP: the last resume drifted into undefined-behavior noise
+          # (an empty sljit_test() body satisfying the loose >138 oracle).
+          # Skipping the actual dustmite call this run so we can read the
+          # real crash's raw errorlevel first and tighten the oracle before
+          # letting it touch the checkpoint again. Remove once that's done.
+          SKIP_DUSTMITE_THIS_RUN: 1
         run: |
           cd reduce3
           mkdir -p target
@@ -981,6 +987,13 @@ jobs:
           echo "raw build exit=$?"
           ./out.exe -v
           echo "raw run exit=$?"
+          # bash translates a Windows exception into a POSIX signal number
+          # (139 for SIGSEGV) - that's not the raw value cmd.exe's own
+          # %errorlevel% sees, which is what test.cmd's own classification
+          # actually runs on. Get the real number directly so the oracle
+          # below can be pinned to it instead of guessing a range.
+          printf '%s\r\n' '@echo off' 'out.exe -v >nul 2>nul' 'echo RAW_ERRORLEVEL=%errorlevel%' > rc_probe.cmd
+          cmd /c rc_probe.cmd
           echo "--- now via test.cmd ---"
           cmd /c test.cmd
           echo "manual test.cmd exit=$?"
@@ -989,7 +1002,11 @@ jobs:
           # The sanity build above writes its outputs into target/ itself -
           # clean those back out so DustMite doesn't load our own build
           # artifacts as part of the source tree to reduce.
-          rm -f target/out.exe target/out.obj target/test_obj.obj
+          rm -f target/out.exe target/out.obj target/test_obj.obj target/rc_probe.cmd
+          if [ -n "$SKIP_DUSTMITE_THIS_RUN" ]; then
+            echo "--- diagnostic-only run, skipping dustmite so the loose oracle can't drift the checkpoint further ---"
+            exit 0
+          fi
           echo "--- handing off to dustmite ---"
           # Without --split, DustMite treats each .c/.h file as a single
           # atomic leaf (can only be kept or removed whole) - it never
