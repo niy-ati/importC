@@ -967,15 +967,19 @@ jobs:
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
           printf '%s\r\n' \
             '@echo off' \
+            'setlocal enabledelayedexpansion' \
             "\"$DMD\" -m64 -allinst -P=/I. -P=/FIimportc_msvc_builtins.h -P=-DSLJIT_HAVE_CONFIG_PRE=1 -c -oftest_obj.obj sljitTest.c >nul 2>nul" \
             'if errorlevel 1 exit /b 1' \
             "\"$DMD\" -m64 -allinst -P=/I. -P=/FIimportc_msvc_builtins.h -P=-DSLJIT_HAVE_CONFIG_PRE=1 -L/DEFAULTLIB:mincore.lib -L/STACK:0x400000 -ofout.exe sljitLir_reduced.c sljitMain.c msvc_intrinsic_shims.c test_obj.obj >nul 2>nul" \
             'if errorlevel 1 exit /b 1' \
-            'out.exe -v >nul 2>nul' \
-            'set RC=%errorlevel%' \
-            'if %RC% GEQ 0 exit /b 1' \
-            'if %RC% LSS -1073741824 exit /b 1' \
-            'exit /b 0' > target/test.cmd
+            'set CRASHED=0' \
+            'for /L %%i in (1,1,5) do (' \
+            '  out.exe -v >nul 2>nul' \
+            '  set RC=!errorlevel!' \
+            '  if !RC! LSS 0 if !RC! GEQ -1073741824 set CRASHED=1' \
+            ')' \
+            'if !CRASHED! EQU 1 exit /b 0' \
+            'exit /b 1' > target/test.cmd
           # A legit run returns 0-138 (TEST_COUNT minus passes). The old
           # "anything outside 0-138" rule was too loose - it let dustmite
           # satisfy it by gutting sljit_test() to an empty body, whose
@@ -984,9 +988,19 @@ jobs:
           # with no real crash at all. A genuine unhandled Windows
           # exception always has NTSTATUS severity bits set (top 2 bits
           # of the 32-bit code = Error), which as a signed int is exactly
-          # the range -1073741824..-1 - matches both known crash codes
-          # here (-1073741819 access violation, -1073741571 stack
-          # overflow) and rejects the 184 drift case and any other small
+          # the range -1073741824..-1 - matches the known crash codes
+          # (-1073741819 access violation, -1073741571 stack overflow)
+          # and rejects the 184 drift case and any other small
+          # garbage value.
+          #
+          # The crash itself is non-deterministic (already flagged in the
+          # "Build and run sljit's own test suite" step above) - running
+          # the exact same unchanged checkpoint three times in a row gave
+          # three different raw codes (139 w/ an explicit Segmentation
+          # fault message, -364731208, then a plain positive 1178576056
+          # that failed dustmite's mandatory initial-interesting check
+          # outright). One sample isn't enough to judge a flaky crash, so
+          # retry the run up to 5 times and accept if any attempt shows
           # garbage value.
           cat target/test.cmd
           echo "--- sanity check: raw build with real output first ---"
