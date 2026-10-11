@@ -931,20 +931,34 @@ jobs:
         run: |
           cd reduce3
           mkdir -p target
-          cp sljitLir_reduced.c target/
-          cp sljitMain.c target/
-          cp sljitTest.c target/
-          cp msvc_intrinsic_shims.c target/
-          cp ../importc-sljit/sljit_src/*.h target/
-          cp ../sljit-test/sljitConfigPre.h target/
-          cp ../sljit-test/sljitConfigPost.h target/
-          cp ../sljit-test/sljitTestBuffers.h target/
-          cp ../sljit-test/sljitTestCall.h target/
-          cp ../sljit-test/sljitTestFloat.h target/
-          cp ../sljit-test/sljitTestSerialize.h target/
-          cp ../sljit-test/sljitTestSimd.h target/
-          BUILTINS_DIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src/include")
-          cp "$(cygpath -u "$BUILTINS_DIR")/importc_msvc_builtins.h" target/
+          if [ -f ../dustmite-checkpoint/sljitLir_reduced.c ]; then
+            # Resume from the last run's actual DustMite output (checked into
+            # the repo) instead of restarting from the full 208K-line file -
+            # it already proved these 4 files alone still build and crash,
+            # with no headers needed (dmd's own default ImportC search path
+            # already finds importc_msvc_builtins.h without our copy).
+            echo "--- resuming from committed dustmite-checkpoint ---"
+            cp ../dustmite-checkpoint/sljitLir_reduced.c target/
+            cp ../dustmite-checkpoint/sljitMain.c target/
+            cp ../dustmite-checkpoint/sljitTest.c target/
+            cp ../dustmite-checkpoint/msvc_intrinsic_shims.c target/
+          else
+            echo "--- no checkpoint found, starting from the fresh preprocess ---"
+            cp sljitLir_reduced.c target/
+            cp sljitMain.c target/
+            cp sljitTest.c target/
+            cp msvc_intrinsic_shims.c target/
+            cp ../importc-sljit/sljit_src/*.h target/
+            cp ../sljit-test/sljitConfigPre.h target/
+            cp ../sljit-test/sljitConfigPost.h target/
+            cp ../sljit-test/sljitTestBuffers.h target/
+            cp ../sljit-test/sljitTestCall.h target/
+            cp ../sljit-test/sljitTestFloat.h target/
+            cp ../sljit-test/sljitTestSerialize.h target/
+            cp ../sljit-test/sljitTestSimd.h target/
+            BUILTINS_DIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src/include")
+            cp "$(cygpath -u "$BUILTINS_DIR")/importc_msvc_builtins.h" target/
+          fi
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
           printf '%s\r\n' \
             '@echo off' \
