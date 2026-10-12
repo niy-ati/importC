@@ -849,6 +849,30 @@ jobs:
         # if this alone reproduces it even some of the 5 times, it's a far
         # smaller, genuinely useful repro to hand over instead of 26k lines.
 
+      - name: Standalone tests1-11 repro - does accumulated state from the earlier tests matter
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -P=/FIimportc_msvc_builtins.h -P=/Iimportc-sljit/sljit_src \
+            -Iimportc-sljit/sljit_src -L/DEFAULTLIB:mincore.lib \
+            -oftests1_11_repro.exe tests1_11_repro.c importc-sljit/sljit_src/sljitLir.c importc-sljit/sljit_src/msvc_intrinsic_shims.c
+          echo "build exit=$?"
+          printf '%s\r\n' '@echo off' 'tests1_11_repro.exe' 'echo RC=%errorlevel%' > run1_11.cmd
+          for i in 1 2 3 4 5; do
+            echo "--- attempt $i ---"
+            cmd /c run1_11.cmd
+          done
+        # test11 alone (previous step) passed clean 5/5 - ruling out "test11's
+        # own code is sufficient on its own". This runs test_exec_allocator,
+        # test_macros, and test1 through test11 in the exact order
+        # sljit_test() calls them, to check whether running test11 AFTER
+        # the preceding 10 tests (not fresh/first) is what matters - same
+        # heap state, same allocator history, same compiler create/destroy
+        # cycles a real run would have built up by that point.
+
       - name: Retry the same build without optimization
         shell: bash
         continue-on-error: true
