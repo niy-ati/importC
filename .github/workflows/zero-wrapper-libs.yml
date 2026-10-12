@@ -721,6 +721,42 @@ jobs:
         # sljit_test() returns TEST_COUNT - successful_tests, so a 0 exit
         # code here means every one of its 138 tests genuinely passed.
 
+      - name: Find the real stack size threshold with retry-confirmed crash checks
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/Iimportc-sljit/sljit_src -P=/Isljit-test -P=-DSLJIT_HAVE_CONFIG_PRE=1 -Iimportc-sljit/sljit_src -Isljit-test"
+          for ENTRY in "4MB:0x400000" "8MB:0x800000" "16MB:0x1000000" "32MB:0x2000000" "64MB:0x4000000"; do
+            NAME="${ENTRY%%:*}"
+            HEX="${ENTRY##*:}"
+            "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -L/STACK:$HEX -ofsuite_$NAME.exe \
+              importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c shims.obj sljitTest.obj
+            echo "=== $NAME build exit=$? ==="
+            printf '%s\r\n' \
+              '@echo off' \
+              "suite_$NAME.exe -v >nul 2>nul" \
+              'echo RC=%errorlevel%' > probe_$NAME.cmd
+            echo "--- $NAME: 5 attempts ---"
+            for i in 1 2 3 4 5; do
+              cmd /c probe_$NAME.cmd
+            done
+          done
+        # Reuses shims.obj/sljitTest.obj already built by the step above
+        # (only the linker /STACK flag changes, so no need to recompile).
+        # cdb's earlier crash analysis (see the cdb step further down) came
+        # back as a genuine STATUS_STACK_OVERFLOW, not corruption at a fixed
+        # line - and 4MB is already known to crash under dmd while the exact
+        # same source+flags under real cl.exe stays clean at that same 4MB,
+        # meaning dmd's codegen is using more real stack per call than
+        # cl.exe's for identical C source. This tests whether that gap is
+        # small enough that a bigger reserve alone makes it go away (and if
+        # so, how big), run 5x per size since the crash point is non-
+        # deterministic - a size that still crashes some but not all of 5
+        # runs is still exhausting, just less reliably hit.
+
       - name: Retry the same build without optimization
         shell: bash
         continue-on-error: true
