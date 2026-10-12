@@ -798,6 +798,30 @@ jobs:
         # current build (CFLAGS, dmd version, or Windows image) clearly
         # differs from whatever produced that earlier result.
 
+      - name: Isolated probe - does sljit_set_const's patch actually land
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -P=/FIimportc_msvc_builtins.h -P=/Iimportc-sljit/sljit_src \
+            -Iimportc-sljit/sljit_src -L/DEFAULTLIB:mincore.lib \
+            -ofconst_probe.exe const_patch_probe.d importc-sljit/sljit_src/sljitLir.c
+          echo "build exit=$?"
+          ./const_probe.exe
+          echo "run exit=$?"
+        # The faulting instruction under cdb was reading through a register
+        # still holding sljit's own "unpatched placeholder" pattern
+        # (0000123456123456 / 12345612345C), exactly what sljit_emit_const
+        # writes before sljit_set_const is supposed to overwrite it. This
+        # isolates JUST that mechanism - one compiler, one const, one patch,
+        # no test suite - and prints the raw bytes at the patch target
+        # before and after sljit_set_const runs, plus whether calling the
+        # generated code actually observes the new value. If the bytes
+        # don't change, the bug is in sljit_set_const's own addr/pointer
+        # arithmetic as compiled by ImportC, not anywhere in the 138 tests.
+
       - name: Retry the same build without optimization
         shell: bash
         continue-on-error: true
