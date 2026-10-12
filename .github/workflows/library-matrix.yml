@@ -85,10 +85,14 @@ jobs:
           $installed = "C:\vcpkg\installed\x64-windows"
           echo "INCLUDE=$installed\include;$env:INCLUDE" >> $env:GITHUB_ENV
           echo "LIB=$installed\lib;$env:LIB" >> $env:GITHUB_ENV
-
-      - name: Check what LIB actually is now
-        shell: bash
-        run: echo "LIB=[$LIB]"
+          # dmd constructs its own explicit /LIBPATH list for the linker
+          # from its own VS auto-detection, rather than forwarding the
+          # inherited LIB env var through to link.exe - confirmed, LIB was
+          # correctly set in the process environment but never reached the
+          # actual link command. -L/LIBPATH is a flag dmd does forward
+          # directly onto the link line, same as how libs-windows in
+          # curl's own dub.json already correctly produces /DEFAULTLIB.
+          echo "DFLAGS=-L/LIBPATH:$installed\lib" >> $env:GITHUB_ENV
 
       - name: sljit
         id: sljit
