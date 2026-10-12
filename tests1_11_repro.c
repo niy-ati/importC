@@ -45,6 +45,35 @@ static sljit_s32 silent = 0;
 #define WCONST(const64, const32) ((sljit_sw)const32)
 #endif /* SLJIT_64BIT_ARCHITECTURE */
 
+#if !(defined SLJIT_CONFIG_UNSUPPORTED && SLJIT_CONFIG_UNSUPPORTED)
+
+/* For interface testing and for test51. */
+void *sljit_test_malloc_exec(sljit_uw size, void *exec_allocator_data)
+{
+	if (exec_allocator_data)
+		return exec_allocator_data;
+
+	return SLJIT_BUILTIN_MALLOC_EXEC(size, exec_allocator_data);
+}
+
+/* For interface testing. */
+void sljit_test_free_code(void* code, void *exec_allocator_data)
+{
+	SLJIT_UNUSED_ARG(exec_allocator_data);
+	SLJIT_BUILTIN_FREE_EXEC(code, exec_allocator_data);
+}
+
+#define MALLOC_EXEC(result, size) \
+	result = SLJIT_MALLOC_EXEC(size, NULL); \
+	if (!result) { \
+		printf("Cannot allocate executable memory\n"); \
+		return; \
+	} \
+	memset(result, 255, size);
+
+#define FREE_EXEC(ptr) \
+	SLJIT_FREE_EXEC(((sljit_u8*)(ptr)) + SLJIT_EXEC_OFFSET(ptr), NULL);
+
 static void test_exec_allocator(void)
 {
 	/* This is not an sljit test. */
