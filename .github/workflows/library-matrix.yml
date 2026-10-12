@@ -26,7 +26,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev zlib1g-dev libsqlite3-dev
 
-      - name: sljit
+      - name: sljit (expected to fail on Linux - see sljit README, GNU asm CPU detection not supported by ImportC yet)
         id: sljit
         continue-on-error: true
         working-directory: importc-sljit/examples/add
@@ -53,7 +53,7 @@ jobs:
       - name: Summary
         if: always()
         run: |
-          echo "sljit:  ${{ steps.sljit.outcome }}"
+          echo "sljit:  ${{ steps.sljit.outcome }} (expected failure - Windows only for now)"
           echo "zlib:   ${{ steps.zlib.outcome }}"
           echo "curl:   ${{ steps.curl.outcome }}"
           echo "sqlite: ${{ steps.sqlite.outcome }} (expected failure)"
@@ -73,13 +73,16 @@ jobs:
 
       - name: Install curl via vcpkg
         shell: bash
-        run: vcpkg install curl:x64-windows
+        run: C:/vcpkg/vcpkg.exe install curl:x64-windows
+        # Two different vcpkg installs exist on these runners: VS's own
+        # bundled copy (whose root $env:VCPKG_ROOT points at) and this
+        # separate standalone one at C:\vcpkg. Using the explicit path for
+        # both install and lookup keeps them talking about the same one.
 
       - name: Point INCLUDE/LIB at vcpkg's installed curl
         shell: pwsh
         run: |
-          $vcpkgRoot = $env:VCPKG_ROOT
-          $installed = Join-Path $vcpkgRoot "installed\x64-windows"
+          $installed = "C:\vcpkg\installed\x64-windows"
           echo "INCLUDE=$installed\include;$env:INCLUDE" >> $env:GITHUB_ENV
           echo "LIB=$installed\lib;$env:LIB" >> $env:GITHUB_ENV
 
