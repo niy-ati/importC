@@ -10597,374 +10597,254 @@ int sljit_test(int argc, char* argv[])
 
 #if !(defined SLJIT_CONFIG_UNSUPPORTED && SLJIT_CONFIG_UNSUPPORTED)
 	test_exec_allocator();
-	printf("CKPT: after test_exec_allocator
-"); fflush(stdout);
+	printf("CKPT: after test_exec_allocator\n"); fflush(stdout);
 #endif /* !SLJIT_CONFIG_UNSUPPORTED */
 	test_macros();
-	printf("CKPT: after test_macros
-"); fflush(stdout);
+	printf("CKPT: after test_macros\n"); fflush(stdout);
 	test1();
-	printf("CKPT: after test1
-"); fflush(stdout);
+	printf("CKPT: after test1\n"); fflush(stdout);
 	test2();
-	printf("CKPT: after test2
-"); fflush(stdout);
+	printf("CKPT: after test2\n"); fflush(stdout);
 	test3();
-	printf("CKPT: after test3
-"); fflush(stdout);
+	printf("CKPT: after test3\n"); fflush(stdout);
 	test4();
-	printf("CKPT: after test4
-"); fflush(stdout);
+	printf("CKPT: after test4\n"); fflush(stdout);
 	test5();
-	printf("CKPT: after test5
-"); fflush(stdout);
+	printf("CKPT: after test5\n"); fflush(stdout);
 	test6();
-	printf("CKPT: after test6
-"); fflush(stdout);
+	printf("CKPT: after test6\n"); fflush(stdout);
 	test7();
-	printf("CKPT: after test7
-"); fflush(stdout);
+	printf("CKPT: after test7\n"); fflush(stdout);
 	test8();
-	printf("CKPT: after test8
-"); fflush(stdout);
+	printf("CKPT: after test8\n"); fflush(stdout);
 	test9();
-	printf("CKPT: after test9
-"); fflush(stdout);
+	printf("CKPT: after test9\n"); fflush(stdout);
 	test10();
-	printf("CKPT: after test10
-"); fflush(stdout);
+	printf("CKPT: after test10\n"); fflush(stdout);
 	test11();
-	printf("CKPT: after test11
-"); fflush(stdout);
+	printf("CKPT: after test11\n"); fflush(stdout);
 	test12();
-	printf("CKPT: after test12
-"); fflush(stdout);
+	printf("CKPT: after test12\n"); fflush(stdout);
 	test13();
-	printf("CKPT: after test13
-"); fflush(stdout);
+	printf("CKPT: after test13\n"); fflush(stdout);
 	test14();
-	printf("CKPT: after test14
-"); fflush(stdout);
+	printf("CKPT: after test14\n"); fflush(stdout);
 	test15();
-	printf("CKPT: after test15
-"); fflush(stdout);
+	printf("CKPT: after test15\n"); fflush(stdout);
 	test16();
-	printf("CKPT: after test16
-"); fflush(stdout);
+	printf("CKPT: after test16\n"); fflush(stdout);
 	test17();
-	printf("CKPT: after test17
-"); fflush(stdout);
+	printf("CKPT: after test17\n"); fflush(stdout);
 	test18();
-	printf("CKPT: after test18
-"); fflush(stdout);
+	printf("CKPT: after test18\n"); fflush(stdout);
 	test19();
-	printf("CKPT: after test19
-"); fflush(stdout);
+	printf("CKPT: after test19\n"); fflush(stdout);
 	test20();
-	printf("CKPT: after test20
-"); fflush(stdout);
+	printf("CKPT: after test20\n"); fflush(stdout);
 	test21();
-	printf("CKPT: after test21
-"); fflush(stdout);
+	printf("CKPT: after test21\n"); fflush(stdout);
 	test22();
-	printf("CKPT: after test22
-"); fflush(stdout);
+	printf("CKPT: after test22\n"); fflush(stdout);
 	test23();
-	printf("CKPT: after test23
-"); fflush(stdout);
+	printf("CKPT: after test23\n"); fflush(stdout);
 	test24();
-	printf("CKPT: after test24
-"); fflush(stdout);
+	printf("CKPT: after test24\n"); fflush(stdout);
 	test25();
-	printf("CKPT: after test25
-"); fflush(stdout);
+	printf("CKPT: after test25\n"); fflush(stdout);
 	test26();
-	printf("CKPT: after test26
-"); fflush(stdout);
+	printf("CKPT: after test26\n"); fflush(stdout);
 	test27();
-	printf("CKPT: after test27
-"); fflush(stdout);
+	printf("CKPT: after test27\n"); fflush(stdout);
 	test28();
-	printf("CKPT: after test28
-"); fflush(stdout);
+	printf("CKPT: after test28\n"); fflush(stdout);
 	test29();
-	printf("CKPT: after test29
-"); fflush(stdout);
+	printf("CKPT: after test29\n"); fflush(stdout);
 	test30();
-	printf("CKPT: after test30
-"); fflush(stdout);
+	printf("CKPT: after test30\n"); fflush(stdout);
 	test31();
-	printf("CKPT: after test31
-"); fflush(stdout);
+	printf("CKPT: after test31\n"); fflush(stdout);
 	test32();
-	printf("CKPT: after test32
-"); fflush(stdout);
+	printf("CKPT: after test32\n"); fflush(stdout);
 	test33();
-	printf("CKPT: after test33
-"); fflush(stdout);
+	printf("CKPT: after test33\n"); fflush(stdout);
 	test34();
-	printf("CKPT: after test34
-"); fflush(stdout);
+	printf("CKPT: after test34\n"); fflush(stdout);
 	test35();
-	printf("CKPT: after test35
-"); fflush(stdout);
+	printf("CKPT: after test35\n"); fflush(stdout);
 	test36();
-	printf("CKPT: after test36
-"); fflush(stdout);
+	printf("CKPT: after test36\n"); fflush(stdout);
 	test37();
-	printf("CKPT: after test37
-"); fflush(stdout);
+	printf("CKPT: after test37\n"); fflush(stdout);
 	test38();
-	printf("CKPT: after test38
-"); fflush(stdout);
+	printf("CKPT: after test38\n"); fflush(stdout);
 	test39();
-	printf("CKPT: after test39
-"); fflush(stdout);
+	printf("CKPT: after test39\n"); fflush(stdout);
 	test40();
-	printf("CKPT: after test40
-"); fflush(stdout);
+	printf("CKPT: after test40\n"); fflush(stdout);
 	test41();
-	printf("CKPT: after test41
-"); fflush(stdout);
+	printf("CKPT: after test41\n"); fflush(stdout);
 	test42();
-	printf("CKPT: after test42
-"); fflush(stdout);
+	printf("CKPT: after test42\n"); fflush(stdout);
 	test43();
-	printf("CKPT: after test43
-"); fflush(stdout);
+	printf("CKPT: after test43\n"); fflush(stdout);
 	test44();
-	printf("CKPT: after test44
-"); fflush(stdout);
+	printf("CKPT: after test44\n"); fflush(stdout);
 	test45();
-	printf("CKPT: after test45
-"); fflush(stdout);
+	printf("CKPT: after test45\n"); fflush(stdout);
 	test46();
-	printf("CKPT: after test46
-"); fflush(stdout);
+	printf("CKPT: after test46\n"); fflush(stdout);
 	test47();
-	printf("CKPT: after test47
-"); fflush(stdout);
+	printf("CKPT: after test47\n"); fflush(stdout);
 	test48();
-	printf("CKPT: after test48
-"); fflush(stdout);
+	printf("CKPT: after test48\n"); fflush(stdout);
 	test49();
-	printf("CKPT: after test49
-"); fflush(stdout);
+	printf("CKPT: after test49\n"); fflush(stdout);
 	test50();
-	printf("CKPT: after test50
-"); fflush(stdout);
+	printf("CKPT: after test50\n"); fflush(stdout);
 	test51();
-	printf("CKPT: after test51
-"); fflush(stdout);
+	printf("CKPT: after test51\n"); fflush(stdout);
 	test52();
-	printf("CKPT: after test52
-"); fflush(stdout);
+	printf("CKPT: after test52\n"); fflush(stdout);
 	test53();
-	printf("CKPT: after test53
-"); fflush(stdout);
+	printf("CKPT: after test53\n"); fflush(stdout);
 	test54();
-	printf("CKPT: after test54
-"); fflush(stdout);
+	printf("CKPT: after test54\n"); fflush(stdout);
 	test55();
-	printf("CKPT: after test55
-"); fflush(stdout);
+	printf("CKPT: after test55\n"); fflush(stdout);
 	test56();
-	printf("CKPT: after test56
-"); fflush(stdout);
+	printf("CKPT: after test56\n"); fflush(stdout);
 	test57();
-	printf("CKPT: after test57
-"); fflush(stdout);
+	printf("CKPT: after test57\n"); fflush(stdout);
 	test58();
-	printf("CKPT: after test58
-"); fflush(stdout);
+	printf("CKPT: after test58\n"); fflush(stdout);
 	test59();
-	printf("CKPT: after test59
-"); fflush(stdout);
+	printf("CKPT: after test59\n"); fflush(stdout);
 	test60();
-	printf("CKPT: after test60
-"); fflush(stdout);
+	printf("CKPT: after test60\n"); fflush(stdout);
 	test61();
-	printf("CKPT: after test61
-"); fflush(stdout);
+	printf("CKPT: after test61\n"); fflush(stdout);
 	test62();
-	printf("CKPT: after test62
-"); fflush(stdout);
+	printf("CKPT: after test62\n"); fflush(stdout);
 	test63();
-	printf("CKPT: after test63
-"); fflush(stdout);
+	printf("CKPT: after test63\n"); fflush(stdout);
 	test64();
-	printf("CKPT: after test64
-"); fflush(stdout);
+	printf("CKPT: after test64\n"); fflush(stdout);
 	test65();
-	printf("CKPT: after test65
-"); fflush(stdout);
+	printf("CKPT: after test65\n"); fflush(stdout);
 	test66();
-	printf("CKPT: after test66
-"); fflush(stdout);
+	printf("CKPT: after test66\n"); fflush(stdout);
 	test67();
-	printf("CKPT: after test67
-"); fflush(stdout);
+	printf("CKPT: after test67\n"); fflush(stdout);
 	test68();
-	printf("CKPT: after test68
-"); fflush(stdout);
+	printf("CKPT: after test68\n"); fflush(stdout);
 	test69();
-	printf("CKPT: after test69
-"); fflush(stdout);
+	printf("CKPT: after test69\n"); fflush(stdout);
 	test70();
-	printf("CKPT: after test70
-"); fflush(stdout);
+	printf("CKPT: after test70\n"); fflush(stdout);
 	test71();
-	printf("CKPT: after test71
-"); fflush(stdout);
+	printf("CKPT: after test71\n"); fflush(stdout);
 	test72();
-	printf("CKPT: after test72
-"); fflush(stdout);
+	printf("CKPT: after test72\n"); fflush(stdout);
 	test73();
-	printf("CKPT: after test73
-"); fflush(stdout);
+	printf("CKPT: after test73\n"); fflush(stdout);
 	test74();
-	printf("CKPT: after test74
-"); fflush(stdout);
+	printf("CKPT: after test74\n"); fflush(stdout);
 	test75();
-	printf("CKPT: after test75
-"); fflush(stdout);
+	printf("CKPT: after test75\n"); fflush(stdout);
 	test76();
-	printf("CKPT: after test76
-"); fflush(stdout);
+	printf("CKPT: after test76\n"); fflush(stdout);
 	test77();
-	printf("CKPT: after test77
-"); fflush(stdout);
+	printf("CKPT: after test77\n"); fflush(stdout);
 	test78();
-	printf("CKPT: after test78
-"); fflush(stdout);
+	printf("CKPT: after test78\n"); fflush(stdout);
 	test79();
-	printf("CKPT: after test79
-"); fflush(stdout);
+	printf("CKPT: after test79\n"); fflush(stdout);
 	test80();
-	printf("CKPT: after test80
-"); fflush(stdout);
+	printf("CKPT: after test80\n"); fflush(stdout);
 	test81();
-	printf("CKPT: after test81
-"); fflush(stdout);
+	printf("CKPT: after test81\n"); fflush(stdout);
 	test82();
-	printf("CKPT: after test82
-"); fflush(stdout);
+	printf("CKPT: after test82\n"); fflush(stdout);
 
 	if (verbose)
 		printf("---- Call tests ----\n");
 
 	test_call1();
-	printf("CKPT: after test_call1
-"); fflush(stdout);
+	printf("CKPT: after test_call1\n"); fflush(stdout);
 	test_call2();
-	printf("CKPT: after test_call2
-"); fflush(stdout);
+	printf("CKPT: after test_call2\n"); fflush(stdout);
 	test_call3();
-	printf("CKPT: after test_call3
-"); fflush(stdout);
+	printf("CKPT: after test_call3\n"); fflush(stdout);
 	test_call4();
-	printf("CKPT: after test_call4
-"); fflush(stdout);
+	printf("CKPT: after test_call4\n"); fflush(stdout);
 	test_call5();
-	printf("CKPT: after test_call5
-"); fflush(stdout);
+	printf("CKPT: after test_call5\n"); fflush(stdout);
 	test_call6();
-	printf("CKPT: after test_call6
-"); fflush(stdout);
+	printf("CKPT: after test_call6\n"); fflush(stdout);
 	test_call7();
-	printf("CKPT: after test_call7
-"); fflush(stdout);
+	printf("CKPT: after test_call7\n"); fflush(stdout);
 	test_call8();
-	printf("CKPT: after test_call8
-"); fflush(stdout);
+	printf("CKPT: after test_call8\n"); fflush(stdout);
 	test_call9();
-	printf("CKPT: after test_call9
-"); fflush(stdout);
+	printf("CKPT: after test_call9\n"); fflush(stdout);
 	test_call10();
-	printf("CKPT: after test_call10
-"); fflush(stdout);
+	printf("CKPT: after test_call10\n"); fflush(stdout);
 	test_call11();
-	printf("CKPT: after test_call11
-"); fflush(stdout);
+	printf("CKPT: after test_call11\n"); fflush(stdout);
 	test_call12();
-	printf("CKPT: after test_call12
-"); fflush(stdout);
+	printf("CKPT: after test_call12\n"); fflush(stdout);
 	test_call13();
-	printf("CKPT: after test_call13
-"); fflush(stdout);
+	printf("CKPT: after test_call13\n"); fflush(stdout);
 
 	if (sljit_has_cpu_feature(SLJIT_HAS_FPU)) {
 		if (verbose)
 			printf("---- Float tests ----\n");
 		test_float1();
-	printf("CKPT: after test_float1
-"); fflush(stdout);
+	printf("CKPT: after test_float1\n"); fflush(stdout);
 		test_float2();
-	printf("CKPT: after test_float2
-"); fflush(stdout);
+	printf("CKPT: after test_float2\n"); fflush(stdout);
 		test_float3();
-	printf("CKPT: after test_float3
-"); fflush(stdout);
+	printf("CKPT: after test_float3\n"); fflush(stdout);
 		test_float4();
-	printf("CKPT: after test_float4
-"); fflush(stdout);
+	printf("CKPT: after test_float4\n"); fflush(stdout);
 		test_float5();
-	printf("CKPT: after test_float5
-"); fflush(stdout);
+	printf("CKPT: after test_float5\n"); fflush(stdout);
 		test_float6();
-	printf("CKPT: after test_float6
-"); fflush(stdout);
+	printf("CKPT: after test_float6\n"); fflush(stdout);
 		test_float7();
-	printf("CKPT: after test_float7
-"); fflush(stdout);
+	printf("CKPT: after test_float7\n"); fflush(stdout);
 		test_float8();
-	printf("CKPT: after test_float8
-"); fflush(stdout);
+	printf("CKPT: after test_float8\n"); fflush(stdout);
 		test_float9();
-	printf("CKPT: after test_float9
-"); fflush(stdout);
+	printf("CKPT: after test_float9\n"); fflush(stdout);
 		test_float10();
-	printf("CKPT: after test_float10
-"); fflush(stdout);
+	printf("CKPT: after test_float10\n"); fflush(stdout);
 		test_float11();
-	printf("CKPT: after test_float11
-"); fflush(stdout);
+	printf("CKPT: after test_float11\n"); fflush(stdout);
 		test_float12();
-	printf("CKPT: after test_float12
-"); fflush(stdout);
+	printf("CKPT: after test_float12\n"); fflush(stdout);
 		test_float13();
-	printf("CKPT: after test_float13
-"); fflush(stdout);
+	printf("CKPT: after test_float13\n"); fflush(stdout);
 		test_float14();
-	printf("CKPT: after test_float14
-"); fflush(stdout);
+	printf("CKPT: after test_float14\n"); fflush(stdout);
 		test_float15();
-	printf("CKPT: after test_float15
-"); fflush(stdout);
+	printf("CKPT: after test_float15\n"); fflush(stdout);
 		test_float16();
-	printf("CKPT: after test_float16
-"); fflush(stdout);
+	printf("CKPT: after test_float16\n"); fflush(stdout);
 		test_float17();
-	printf("CKPT: after test_float17
-"); fflush(stdout);
+	printf("CKPT: after test_float17\n"); fflush(stdout);
 		test_float18();
-	printf("CKPT: after test_float18
-"); fflush(stdout);
+	printf("CKPT: after test_float18\n"); fflush(stdout);
 		test_float19();
-	printf("CKPT: after test_float19
-"); fflush(stdout);
+	printf("CKPT: after test_float19\n"); fflush(stdout);
 		test_float20();
-	printf("CKPT: after test_float20
-"); fflush(stdout);
+	printf("CKPT: after test_float20\n"); fflush(stdout);
 		test_float21();
-	printf("CKPT: after test_float21
-"); fflush(stdout);
+	printf("CKPT: after test_float21\n"); fflush(stdout);
 		test_float22();
-	printf("CKPT: after test_float22
-"); fflush(stdout);
+	printf("CKPT: after test_float22\n"); fflush(stdout);
 		test_float23();
-	printf("CKPT: after test_float23
-"); fflush(stdout);
+	printf("CKPT: after test_float23\n"); fflush(stdout);
 	} else {
 		if (verbose)
 			printf("no fpu available, fpu tests are skipped\n");
@@ -10975,38 +10855,27 @@ int sljit_test(int argc, char* argv[])
 		if (verbose)
 			printf("---- SIMD tests ----\n");
 		test_simd1();
-	printf("CKPT: after test_simd1
-"); fflush(stdout);
+	printf("CKPT: after test_simd1\n"); fflush(stdout);
 		test_simd2();
-	printf("CKPT: after test_simd2
-"); fflush(stdout);
+	printf("CKPT: after test_simd2\n"); fflush(stdout);
 		test_simd3();
-	printf("CKPT: after test_simd3
-"); fflush(stdout);
+	printf("CKPT: after test_simd3\n"); fflush(stdout);
 		test_simd4();
-	printf("CKPT: after test_simd4
-"); fflush(stdout);
+	printf("CKPT: after test_simd4\n"); fflush(stdout);
 		test_simd5();
-	printf("CKPT: after test_simd5
-"); fflush(stdout);
+	printf("CKPT: after test_simd5\n"); fflush(stdout);
 		test_simd6();
-	printf("CKPT: after test_simd6
-"); fflush(stdout);
+	printf("CKPT: after test_simd6\n"); fflush(stdout);
 		test_simd7();
-	printf("CKPT: after test_simd7
-"); fflush(stdout);
+	printf("CKPT: after test_simd7\n"); fflush(stdout);
 		test_simd8();
-	printf("CKPT: after test_simd8
-"); fflush(stdout);
+	printf("CKPT: after test_simd8\n"); fflush(stdout);
 		test_simd9();
-	printf("CKPT: after test_simd9
-"); fflush(stdout);
+	printf("CKPT: after test_simd9\n"); fflush(stdout);
 		test_simd10();
-	printf("CKPT: after test_simd10
-"); fflush(stdout);
+	printf("CKPT: after test_simd10\n"); fflush(stdout);
 		test_simd11();
-	printf("CKPT: after test_simd11
-"); fflush(stdout);
+	printf("CKPT: after test_simd11\n"); fflush(stdout);
 	} else {
 		if (verbose)
 			printf("no simd available, simd tests are skipped\n");
@@ -11017,38 +10886,28 @@ int sljit_test(int argc, char* argv[])
 		printf("---- Serialize tests ----\n");
 
 	test_buffer1();
-	printf("CKPT: after test_buffer1
-"); fflush(stdout);
+	printf("CKPT: after test_buffer1\n"); fflush(stdout);
 	test_buffer2();
-	printf("CKPT: after test_buffer2
-"); fflush(stdout);
+	printf("CKPT: after test_buffer2\n"); fflush(stdout);
 	test_buffer3();
-	printf("CKPT: after test_buffer3
-"); fflush(stdout);
+	printf("CKPT: after test_buffer3\n"); fflush(stdout);
 	test_buffer4();
-	printf("CKPT: after test_buffer4
-"); fflush(stdout);
+	printf("CKPT: after test_buffer4\n"); fflush(stdout);
 	test_buffer5();
-	printf("CKPT: after test_buffer5
-"); fflush(stdout);
+	printf("CKPT: after test_buffer5\n"); fflush(stdout);
 
 	test_serialize1();
-	printf("CKPT: after test_serialize1
-"); fflush(stdout);
+	printf("CKPT: after test_serialize1\n"); fflush(stdout);
 	test_serialize2();
-	printf("CKPT: after test_serialize2
-"); fflush(stdout);
+	printf("CKPT: after test_serialize2\n"); fflush(stdout);
 	test_serialize3();
-	printf("CKPT: after test_serialize3
-"); fflush(stdout);
+	printf("CKPT: after test_serialize3\n"); fflush(stdout);
 	test_serialize4();
-	printf("CKPT: after test_serialize4
-"); fflush(stdout);
+	printf("CKPT: after test_serialize4\n"); fflush(stdout);
 
 #if (defined SLJIT_EXECUTABLE_ALLOCATOR && SLJIT_EXECUTABLE_ALLOCATOR)
 	sljit_free_unused_memory_exec();
-	printf("CKPT: after sljit_free_unused_memory_exec
-"); fflush(stdout);
+	printf("CKPT: after sljit_free_unused_memory_exec\n"); fflush(stdout);
 #endif /* SLJIT_EXECUTABLE_ALLOCATOR */
 
 #	define TEST_COUNT 138
