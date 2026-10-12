@@ -9,5 +9,6 @@
         "-P=-I/usr/include/x86_64-linux-gnu",
         "-P=-I/usr/local/include"
     ],
-    "libs-posix": ["curl"]
+    "libs-posix": ["curl"],
+    "libs-windows": ["libcurl"]
 }

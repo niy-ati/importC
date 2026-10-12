@@ -86,10 +86,6 @@ jobs:
           echo "INCLUDE=$installed\include;$env:INCLUDE" >> $env:GITHUB_ENV
           echo "LIB=$installed\lib;$env:LIB" >> $env:GITHUB_ENV
 
-      - name: What did vcpkg actually name curl's import lib
-        shell: pwsh
-        run: Get-ChildItem "C:\vcpkg\installed\x64-windows\lib" -Filter "*curl*"
-
       - name: sljit
         id: sljit
         continue-on-error: true
