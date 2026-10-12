@@ -873,6 +873,38 @@ jobs:
         # heap state, same allocator history, same compiler create/destroy
         # cycles a real run would have built up by that point.
 
+      - name: Checkpoint every test call in the real full suite, find the exact last one before the crash
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          CFLAGS="-m64 -release -O -P=/FIimportc_msvc_builtins.h -P=/Iimportc-sljit/sljit_src -P=/Isljit-test -P=-DSLJIT_HAVE_CONFIG_PRE=1 -Iimportc-sljit/sljit_src -Isljit-test"
+          cp sljitTest_checkpointed.c sljit-test/sljitTest.c
+          "$DMD" $CFLAGS -c -ofshims_ckpt.obj importc-sljit/sljit_src/msvc_intrinsic_shims.c
+          "$DMD" $CFLAGS -allinst -c -ofsljitTest_ckpt.obj sljit-test/sljitTest.c
+          "$DMD" $CFLAGS -allinst -L/DEFAULTLIB:mincore.lib -L/STACK:0x400000 -ofsljit-test-ckpt.exe \
+            importc-sljit/sljit_src/sljitLir.c sljit-test/sljitMain.c shims_ckpt.obj sljitTest_ckpt.obj
+          echo "build exit=$?"
+          printf '%s\r\n' '@echo off' 'sljit-test-ckpt.exe -v' 'echo RC=%errorlevel%' > run_ckpt.cmd
+          for i in 1 2 3 4 5; do
+            echo "--- attempt $i ---"
+            cmd /c run_ckpt.cmd
+            echo "--- end attempt $i ---"
+          done
+        # Every test already prints "Run testN" with -v, but a real crash
+        # kills the process before stdio's buffer ever flushes, so none of
+        # that output survives to the log (confirmed: the official
+        # unmodified-suite step above shows zero test output despite -v,
+        # just a bare Segmentation fault). sljitTest_checkpointed.c is the
+        # real upstream sljitTest.c with an explicit printf+fflush inserted
+        # after every one of the ~140 test calls in sljit_test() - so
+        # whatever actually got flushed survives even if the process dies
+        # immediately after. The LAST "CKPT: after X" line printed names
+        # the exact last test that started before the crash, across 5
+        # attempts (since the exact point can vary run to run).
+
       - name: Retry the same build without optimization
         shell: bash
         continue-on-error: true
