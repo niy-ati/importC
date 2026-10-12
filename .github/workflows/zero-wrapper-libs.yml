@@ -757,6 +757,27 @@ jobs:
         # deterministic - a size that still crashes some but not all of 5
         # runs is still exhausting, just less reliably hit.
 
+      - name: Catch THIS run's deterministic access violation under cdb
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          CDB=$(cygpath -w "C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe")
+          EXE=$(cygpath -w "$(pwd)/suite_4MB.exe")
+          "$CDB" -o -c "g;.exr -1;kb 20;!analyze -v;q" "$EXE" -v
+          echo "cdb exit=$?"
+        # All 25 runs in the step above (5 stack sizes x 5 attempts) came
+        # back with the IDENTICAL code -1073741819 (0xC0000005,
+        # STATUS_ACCESS_VIOLATION), not the STATUS_STACK_OVERFLOW the
+        # earlier cdb run (further down this file) found, and completely
+        # unaffected by stack size - the opposite of what cumulative stack
+        # exhaustion would show. That's a different, and now reliably
+        # reproducible, crash signature - worth catching fresh under cdb
+        # instead of trusting the old finding, since something about the
+        # current build (CFLAGS, dmd version, or Windows image) clearly
+        # differs from whatever produced that earlier result.
+
       - name: Retry the same build without optimization
         shell: bash
         continue-on-error: true
