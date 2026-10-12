@@ -1,0 +1,121 @@
+# Milestone 1: smoke-test matrix for the five target libraries, through
+# ImportC, on Linux and Windows. Reports pass/fail per library. sqlite is
+# expected to fail here (Milestone 2 blocker, see importc-sqlite/README.md)
+# and is kept in the matrix on purpose so that stays visible, not hidden.
+name: Library matrix
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare D compiler
+        uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: dmd-master
+
+      - name: Install system library dev headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev zlib1g-dev libsqlite3-dev
+
+      - name: sljit
+        id: sljit
+        continue-on-error: true
+        working-directory: importc-sljit/examples/add
+        run: dub run --compiler=dmd-master
+
+      - name: zlib
+        id: zlib
+        continue-on-error: true
+        working-directory: importc-zlib/examples/roundtrip
+        run: dub run --compiler=dmd-master
+
+      - name: curl
+        id: curl
+        continue-on-error: true
+        working-directory: importc-curl/examples/version_check
+        run: dub run --compiler=dmd-master
+
+      - name: sqlite (expected to fail - Milestone 2 blocker)
+        id: sqlite
+        continue-on-error: true
+        working-directory: importc-sqlite
+        run: dmd -m64 -c -P=-DSQLITE_DISABLE_INTRINSIC sqlite_src/sqlite3.c
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "sljit:  ${{ steps.sljit.outcome }}"
+          echo "zlib:   ${{ steps.zlib.outcome }}"
+          echo "curl:   ${{ steps.curl.outcome }}"
+          echo "sqlite: ${{ steps.sqlite.outcome }} (expected failure)"
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare D compiler
+        uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: dmd-master
+
+      - name: Setup MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install curl via vcpkg
+        shell: bash
+        run: vcpkg install curl:x64-windows
+
+      - name: Point INCLUDE/LIB at vcpkg's installed curl
+        shell: pwsh
+        run: |
+          $vcpkgRoot = $env:VCPKG_ROOT
+          $installed = Join-Path $vcpkgRoot "installed\x64-windows"
+          echo "INCLUDE=$installed\include;$env:INCLUDE" >> $env:GITHUB_ENV
+          echo "LIB=$installed\lib;$env:LIB" >> $env:GITHUB_ENV
+
+      - name: sljit
+        id: sljit
+        continue-on-error: true
+        shell: bash
+        working-directory: importc-sljit/examples/add
+        run: dub run --compiler=dmd-master
+
+      - name: zlib
+        id: zlib
+        continue-on-error: true
+        shell: bash
+        working-directory: importc-zlib/examples/roundtrip
+        run: dub run --compiler=dmd-master
+
+      - name: curl
+        id: curl
+        continue-on-error: true
+        shell: bash
+        working-directory: importc-curl/examples/version_check
+        run: dub run --compiler=dmd-master
+
+      - name: sqlite (expected to fail - Milestone 2 blocker)
+        id: sqlite
+        continue-on-error: true
+        shell: bash
+        working-directory: importc-sqlite
+        run: dmd -m64 -c -P=-DSQLITE_OMIT_SEH sqlite_src/sqlite3.c
+
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          echo "sljit:  ${{ steps.sljit.outcome }}"
+          echo "zlib:   ${{ steps.zlib.outcome }}"
+          echo "curl:   ${{ steps.curl.outcome }}"
+          echo "sqlite: ${{ steps.sqlite.outcome }} (expected failure)"
