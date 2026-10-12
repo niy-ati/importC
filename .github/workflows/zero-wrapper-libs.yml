@@ -822,6 +822,33 @@ jobs:
         # don't change, the bug is in sljit_set_const's own addr/pointer
         # arithmetic as compiled by ImportC, not anywhere in the 138 tests.
 
+      - name: Standalone test11-only repro - does it crash without the other 137 tests
+        shell: bash
+        continue-on-error: true
+        env:
+          MSYS_NO_PATHCONV: 1
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          "$DMD" -m64 -P=/FIimportc_msvc_builtins.h -P=/Iimportc-sljit/sljit_src \
+            -Iimportc-sljit/sljit_src -L/DEFAULTLIB:mincore.lib \
+            -oftest11_repro.exe test11_repro.c importc-sljit/sljit_src/sljitLir.c importc-sljit/sljit_src/msvc_intrinsic_shims.c
+          echo "build exit=$?"
+          printf '%s\r\n' '@echo off' 'test11_repro.exe' 'echo RC=%errorlevel%' > run11.cmd
+          for i in 1 2 3 4 5; do
+            echo "--- attempt $i ---"
+            cmd /c run11.cmd
+          done
+        # Nicholas's call: the full 138-test repro (~26k raw lines) is too
+        # much for a useful report. The earlier bisection (before today)
+        # already pointed at test11 specifically - its checkpoints matched
+        # sljit_create_compiler / emit_enter / generate_code / first func1
+        # call / set_const / second func1 call / free_code exactly. This is
+        # that one test's real logic alone, unmodified (same consts, same
+        # sljit_alloc_memory calls, same MEM-addressed consts), nothing
+        # else from the suite. Run 5x since the crash is non-deterministic -
+        # if this alone reproduces it even some of the 5 times, it's a far
+        # smaller, genuinely useful repro to hand over instead of 26k lines.
+
       - name: Retry the same build without optimization
         shell: bash
         continue-on-error: true
