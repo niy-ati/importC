@@ -86,6 +86,10 @@ jobs:
           echo "INCLUDE=$installed\include;$env:INCLUDE" >> $env:GITHUB_ENV
           echo "LIB=$installed\lib;$env:LIB" >> $env:GITHUB_ENV
 
+      - name: Check what LIB actually is now
+        shell: bash
+        run: echo "LIB=[$LIB]"
+
       - name: sljit
         id: sljit
         continue-on-error: true
