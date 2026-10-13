@@ -83,6 +83,8 @@ jobs:
 
       - name: Case 4 - the real, actual sljitMain.c + sljitTest.c, unmodified upstream
         shell: bash
+        env:
+          MSYS_NO_PATHCONV: "1"
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
           IMPORTC_INC=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src")
