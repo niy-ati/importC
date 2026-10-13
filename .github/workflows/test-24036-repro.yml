@@ -13,23 +13,34 @@ jobs:
           ref: master
           path: dmd-src
 
+      - uses: actions/checkout@v4
+        with:
+          repository: dlang/phobos
+          ref: master
+          path: phobos
+
       - uses: ilammy/msvc-dev-cmd@v1
 
       - uses: dlang-community/setup-dlang@v1
         with:
           compiler: dmd-latest
 
-      - name: Build dmd from upstream master
+      - name: Build dmd, druntime and phobos from upstream master
         shell: bash
         run: |
           cd dmd-src
           make -j$(nproc) MODEL=64 HOST_DMD=dmd ENABLE_RELEASE=1 ENABLE_ASSERTS=1 dmd
+          DMDBIN=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          make -j$(nproc) -C druntime MODEL=64 OS=windows BUILD=release DMD="$DMDBIN"
+          make -j$(nproc) -C ../phobos MODEL=64 OS=windows BUILD=release DMD="$DMDBIN"
 
       - name: Reproduce the exact issue #24036 repro steps
         shell: bash
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
           IMPORTC_INC=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src")
+          LIBDIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64")
+          PHOBOSLIBDIR=$(cygpath -w "$GITHUB_WORKSPACE/phobos/generated/windows/release/64")
           mkdir -p repro && cd repro
           cat > a.h << 'EOF'
           typedef struct {
@@ -51,5 +62,5 @@ jobs:
               arr ~= s;
           }
           EOF
-          "$DMD" -m64 -I"$IMPORTC_INC" -I. b.d
+          "$DMD" -m64 -I"$IMPORTC_INC" -I. -L/LIBPATH:"$LIBDIR" -L/LIBPATH:"$PHOBOSLIBDIR" -defaultlib=phobos64 b.d
           echo "repro exit=$?  (0 = bug NOT present / already fixed, nonzero = bug still reproduces)"
