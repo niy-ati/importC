@@ -10,29 +10,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - label: mergebase-anchor
-            dmd_ref: 400f45d2fe780328d69e2999d0fca27d9c9893ff
+          - label: bisect3-24
+            dmd_ref: a68ed1432307fccae41f410e693dd4c91f3608f3
             phobos_ref: master
-          - label: bisect2-1
-            dmd_ref: b17064ff5289cc43f8ec01ac58cf236caecfe7a5
+          - label: bisect3-48
+            dmd_ref: d5b07be26f269fb22e957451e189b8bf89ccfa67
             phobos_ref: master
-          - label: bisect2-2
-            dmd_ref: 5677415103984205af0c43da9ab11f2ada106e27
+          - label: bisect3-72
+            dmd_ref: e10899aa4e15bf3e4690784af0fec48488d84cec
             phobos_ref: master
-          - label: bisect2-3
-            dmd_ref: 6432bdb923fa049fe4391acc5dc5cbead898b94d
+          - label: bisect3-96
+            dmd_ref: 6dbb86e69192c47b35017b167d8dc50eab080618
             phobos_ref: master
-          - label: bisect2-4
-            dmd_ref: 3aa585f0f39de6459fe799c7cd8b592f22a74cea
+          - label: bisect3-120
+            dmd_ref: c8817530156618315cac6929e8aa09f47854a335
             phobos_ref: master
-          - label: bisect2-5
-            dmd_ref: b25cf3f03e8fe77f7cccfee073b1e3412ea771e7
+          - label: bisect3-144
+            dmd_ref: 6bf6e5f67fd3550fa94e47bee238c94263ba8717
             phobos_ref: master
-          - label: bisect2-6
-            dmd_ref: f363762eaf231230309b10084e5aaf0d6d4e8523
-            phobos_ref: master
-          - label: bisect2-7
-            dmd_ref: 09e2c73a0b604911b1d64ca0c4de644706dfc750
+          - label: bisect3-168
+            dmd_ref: 5e8d0f0afb69c44af8da20b8635070b1b9f8c51a
             phobos_ref: master
     steps:
       - uses: actions/checkout@v4
