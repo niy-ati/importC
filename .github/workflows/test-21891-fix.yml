@@ -29,6 +29,7 @@ jobs:
         shell: bash
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          IMPORTC_INC=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src")
           mkdir -p case1 && cd case1
           cat > main_union.c << 'EOF'
           union executable_code {
@@ -45,13 +46,15 @@ jobs:
               long (*func3)(long a, long b, long c);
           };
           EOF
-          "$DMD" -m64 -c main_union.c test_union.c
+          "$DMD" -m64 -I"$IMPORTC_INC" -c main_union.c test_union.c
           echo "case1 exit=$?  (expect 0 - same size/alignment, should now compile)"
 
       - name: Case 2 - genuinely different union size, must still error
         shell: bash
+        continue-on-error: true
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          IMPORTC_INC=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src")
           mkdir -p case2 && cd case2
           cat > a.c << 'EOF'
           union U { int x; };
@@ -59,13 +62,15 @@ jobs:
           cat > b.c << 'EOF'
           union U { long long x; };
           EOF
-          "$DMD" -m64 -c a.c b.c
+          "$DMD" -m64 -I"$IMPORTC_INC" -c a.c b.c
           echo "case2 exit=$?  (expect nonzero - different size, must still error)"
 
       - name: Case 3 - struct, same size+alignment but different field type, must still error
         shell: bash
+        continue-on-error: true
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          IMPORTC_INC=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src")
           mkdir -p case3 && cd case3
           cat > a.c << 'EOF'
           struct S { long long a; };
@@ -73,5 +78,5 @@ jobs:
           cat > b.c << 'EOF'
           struct S { void* a; };
           EOF
-          "$DMD" -m64 -c a.c b.c
+          "$DMD" -m64 -I"$IMPORTC_INC" -c a.c b.c
           echo "case3 exit=$?  (expect nonzero - structs unaffected, field type must still match)"
