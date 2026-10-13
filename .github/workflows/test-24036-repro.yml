@@ -11,7 +11,7 @@ jobs:
         with:
           repository: dlang/dmd
           ref: master
-          path: dmd-src
+          path: dmd
 
       - uses: actions/checkout@v4
         with:
@@ -28,18 +28,18 @@ jobs:
       - name: Build dmd, druntime and phobos from upstream master
         shell: bash
         run: |
-          cd dmd-src
+          cd dmd
           make -j$(nproc) MODEL=64 HOST_DMD=dmd ENABLE_RELEASE=1 ENABLE_ASSERTS=1 dmd
-          DMDBIN=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          DMDBIN=$(cygpath -w "$GITHUB_WORKSPACE/dmd/generated/windows/release/64/dmd.exe")
           make -j$(nproc) -C druntime MODEL=64 OS=windows BUILD=release DMD="$DMDBIN"
           make -j$(nproc) -C ../phobos MODEL=64 OS=windows BUILD=release DMD="$DMDBIN"
 
       - name: Reproduce the exact issue #24036 repro steps
         shell: bash
         run: |
-          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          IMPORTC_INC=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src")
-          LIBDIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64")
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd/generated/windows/release/64/dmd.exe")
+          IMPORTC_INC=$(cygpath -w "$GITHUB_WORKSPACE/dmd/druntime/src")
+          LIBDIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd/generated/windows/release/64")
           PHOBOSLIBDIR=$(cygpath -w "$GITHUB_WORKSPACE/phobos/generated/windows/release/64")
           mkdir -p repro && cd repro
           cat > a.h << 'EOF'
