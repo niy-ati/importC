@@ -89,17 +89,11 @@ jobs:
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
           IMPORTC_INC=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src")
           mkdir -p case4 && cd case4
-          mkdir -p sljit_src sljit_test
-          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitLir.c" -o sljit_src/sljitLir.c
-          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitLir.h" -o sljit_src/sljitLir.h
-          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitConfig.h" -o sljit_src/sljitConfig.h
-          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitConfigCPU.h" -o sljit_src/sljitConfigCPU.h
-          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitConfigInternal.h" -o sljit_src/sljitConfigInternal.h
-          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitUtils.c" -o sljit_src/sljitUtils.c
-          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitExecAllocator.c" -o sljit_src/sljitExecAllocator.c
-          for f in sljitMain.c sljitTest.c sljitTestBuffers.h sljitTestCall.h sljitTestFloat.h sljitTestSerialize.h sljitTestSimd.h sljitConfigPre.h sljitConfigPost.h; do
-            curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/$f" -o "sljit_test/$f"
-          done
+          curl -sL "https://github.com/zherczeg/sljit/archive/39c508d1b8fbae332d60c7450db20236913089da.tar.gz" -o sljit.tar.gz
+          tar xzf sljit.tar.gz
+          SLJIT_DIR=sljit-39c508d1b8fbae332d60c7450db20236913089da
+          cp -r "$SLJIT_DIR/sljit_src" sljit_src
+          cp -r "$SLJIT_DIR/test_src" sljit_test
           cat > importc_msvc_builtins.h << 'EOF'
           unsigned __arch_inverted(void);
           unsigned __arch_avx10ver(void);
