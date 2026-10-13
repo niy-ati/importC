@@ -6,11 +6,19 @@ on:
 jobs:
   test-windows:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: pre-fix
+            dmd_ref: 98ef0c3ec3d37a4b8468abb9f1721e3be2629f61
+          - label: post-fix
+            dmd_ref: 0c0d44aaf87c3e53b9dfd1b26baeef147b225ef1
     steps:
       - uses: actions/checkout@v4
         with:
           repository: dlang/dmd
-          ref: master
+          ref: ${{ matrix.dmd_ref }}
           path: dmd
 
       - uses: actions/checkout@v4
@@ -25,7 +33,7 @@ jobs:
         with:
           compiler: dmd-latest
 
-      - name: Build dmd, druntime and phobos from upstream master
+      - name: Build dmd, druntime and phobos from ${{ matrix.label }} (${{ matrix.dmd_ref }})
         shell: bash
         run: |
           cd dmd
@@ -34,7 +42,7 @@ jobs:
           make -j$(nproc) -C druntime MODEL=64 OS=windows BUILD=release DMD="$DMDBIN"
           make -j$(nproc) -C ../phobos MODEL=64 OS=windows BUILD=release DMD="$DMDBIN"
 
-      - name: Reproduce the exact issue #24036 repro steps
+      - name: Reproduce the exact issue #24036 repro steps (${{ matrix.label }})
         shell: bash
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd/generated/windows/release/64/dmd.exe")
@@ -63,4 +71,4 @@ jobs:
           }
           EOF
           "$DMD" -m64 -I"$IMPORTC_INC" -I. -L/LIBPATH:"$LIBDIR" -L/LIBPATH:"$PHOBOSLIBDIR" -defaultlib=phobos64 b.d
-          echo "repro exit=$?  (0 = bug NOT present / already fixed, nonzero = bug still reproduces)"
+          echo "repro exit=$?  (${{ matrix.label }}: 0 = bug NOT present, nonzero = bug reproduces)"
