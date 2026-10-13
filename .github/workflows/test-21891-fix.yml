@@ -85,7 +85,7 @@ jobs:
         shell: bash
         run: |
           DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
-          BUILTINS_DIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src/include")
+          IMPORTC_INC=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src")
           mkdir -p case4 && cd case4
           mkdir -p sljit_src sljit_test
           curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitLir.c" -o sljit_src/sljitLir.c
@@ -98,6 +98,11 @@ jobs:
           for f in sljitMain.c sljitTest.c sljitTestBuffers.h sljitTestCall.h sljitTestFloat.h sljitTestSerialize.h sljitTestSimd.h sljitConfigPre.h sljitConfigPost.h; do
             curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/$f" -o "sljit_test/$f"
           done
+          cat > importc_msvc_builtins.h << 'EOF'
+          unsigned __arch_inverted(void);
+          unsigned __arch_avx10ver(void);
+          volatile void *RtlSetVolatileMemory(volatile void *Destination, int Fill, unsigned long long Length);
+          EOF
           cat > msvc_intrinsic_shims.c << 'EOF'
           unsigned __arch_inverted(void) { return 0xFFFFFFFFu; }
           unsigned __arch_avx10ver(void) { return 0; }
@@ -109,5 +114,5 @@ jobs:
               return Destination;
           }
           EOF
-          "$DMD" -m64 -allinst -P=/FIimportc_msvc_builtins.h -P=/I"$BUILTINS_DIR" -P=/Isljit_src -P=/Isljit_test -P=-DWIN32_LEAN_AND_MEAN -P=-DSLJIT_HAVE_CONFIG_PRE=1 -I"$BUILTINS_DIR" -Isljit_src -Isljit_test -c sljit_src/sljitLir.c sljit_test/sljitMain.c sljit_test/sljitTest.c msvc_intrinsic_shims.c
+          "$DMD" -m64 -allinst -P=/FIimportc_msvc_builtins.h -P=/I. -P=/Isljit_src -P=/Isljit_test -P=-DWIN32_LEAN_AND_MEAN -P=-DSLJIT_HAVE_CONFIG_PRE=1 -I"$IMPORTC_INC" -Isljit_src -Isljit_test -c sljit_src/sljitLir.c sljit_test/sljitMain.c sljit_test/sljitTest.c msvc_intrinsic_shims.c
           echo "case4 exit=$?  (expect 0 - the real, unmodified upstream files, should now compile together)"
