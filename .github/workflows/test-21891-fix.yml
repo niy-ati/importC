@@ -80,3 +80,34 @@ jobs:
           EOF
           "$DMD" -m64 -I"$IMPORTC_INC" -c a.c b.c
           echo "case3 exit=$?  (expect nonzero - structs unaffected, field type must still match)"
+
+      - name: Case 4 - the real, actual sljitMain.c + sljitTest.c, unmodified upstream
+        shell: bash
+        run: |
+          DMD=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          BUILTINS_DIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/druntime/src/include")
+          mkdir -p case4 && cd case4
+          mkdir -p sljit_src sljit_test
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitLir.c" -o sljit_src/sljitLir.c
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitLir.h" -o sljit_src/sljitLir.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitConfig.h" -o sljit_src/sljitConfig.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitConfigCPU.h" -o sljit_src/sljitConfigCPU.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitConfigInternal.h" -o sljit_src/sljitConfigInternal.h
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitUtils.c" -o sljit_src/sljitUtils.c
+          curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/sljit_src/sljitExecAllocator.c" -o sljit_src/sljitExecAllocator.c
+          for f in sljitMain.c sljitTest.c sljitTestBuffers.h sljitTestCall.h sljitTestFloat.h sljitTestSerialize.h sljitTestSimd.h sljitConfigPre.h sljitConfigPost.h; do
+            curl -sL "https://raw.githubusercontent.com/zherczeg/sljit/39c508d1/test_src/$f" -o "sljit_test/$f"
+          done
+          cat > msvc_intrinsic_shims.c << 'EOF'
+          unsigned __arch_inverted(void) { return 0xFFFFFFFFu; }
+          unsigned __arch_avx10ver(void) { return 0; }
+          volatile void *RtlSetVolatileMemory(volatile void *Destination, int Fill, unsigned long long Length)
+          {
+              volatile unsigned char *p = (volatile unsigned char *)Destination;
+              unsigned long long i;
+              for (i = 0; i < Length; i++) p[i] = (unsigned char)Fill;
+              return Destination;
+          }
+          EOF
+          "$DMD" -m64 -allinst -P=/FIimportc_msvc_builtins.h -P=/I"$BUILTINS_DIR" -P=/Isljit_src -P=/Isljit_test -P=-DWIN32_LEAN_AND_MEAN -P=-DSLJIT_HAVE_CONFIG_PRE=1 -I"$BUILTINS_DIR" -Isljit_src -Isljit_test -c sljit_src/sljitLir.c sljit_test/sljitMain.c sljit_test/sljitTest.c msvc_intrinsic_shims.c
+          echo "case4 exit=$?  (expect 0 - the real, unmodified upstream files, should now compile together)"
