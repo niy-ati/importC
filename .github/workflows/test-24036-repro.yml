@@ -10,10 +10,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - label: pre-fix
-            dmd_ref: 98ef0c3ec3d37a4b8468abb9f1721e3be2629f61
-          - label: post-fix
-            dmd_ref: 0c0d44aaf87c3e53b9dfd1b26baeef147b225ef1
+          - label: v2.113.0-anchor
+            dmd_ref: v2.113.0
+            phobos_ref: v2.113.0
+          - label: bisect-1
+            dmd_ref: 76801663fa4718840b0425555ff6d0e55fa74abb
+            phobos_ref: master
+          - label: bisect-2
+            dmd_ref: 37fa185e625d389f9d1598abb8b2d09d315793a9
+            phobos_ref: master
+          - label: bisect-3
+            dmd_ref: 4d437b3748b7a67ded3ffce379ca7fa26be9b0c2
+            phobos_ref: master
+          - label: bisect-4
+            dmd_ref: 4264da7e861b196efee92696ec8f93cf1893f8cb
+            phobos_ref: master
+          - label: bisect-5
+            dmd_ref: 68a5bb352081481bb3a729de6977afe51db58076
+            phobos_ref: master
+          - label: bisect-6
+            dmd_ref: 8187392804f9c69261fa012657484562169e1aea
+            phobos_ref: master
+          - label: bisect-7
+            dmd_ref: abb0daeb775896b4546dafae72519be47dc75e64
+            phobos_ref: master
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: dlang/phobos
-          ref: master
+          ref: ${{ matrix.phobos_ref }}
           path: phobos
 
       - uses: ilammy/msvc-dev-cmd@v1
