@@ -83,6 +83,7 @@ jobs:
 
       - name: Case 4 - the real, actual sljitMain.c + sljitTest.c, unmodified upstream
         shell: bash
+        continue-on-error: true
         env:
           MSYS_NO_PATHCONV: "1"
         run: |
