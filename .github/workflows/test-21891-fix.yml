@@ -112,3 +112,13 @@ jobs:
           EOF
           "$DMD" -m64 -allinst -P=/FIimportc_msvc_builtins.h -P=/I. -P=/Isljit_src -P=/Isljit_test -P=-DWIN32_LEAN_AND_MEAN -P=-DSLJIT_HAVE_CONFIG_PRE=1 -I"$IMPORTC_INC" -Isljit_src -Isljit_test -c sljit_src/sljitLir.c sljit_test/sljitMain.c sljit_test/sljitTest.c msvc_intrinsic_shims.c
           echo "case4 exit=$?  (expect 0 - the real, unmodified upstream files, should now compile together)"
+
+      - name: Case 5 - run the actual regression test through dmd's own real test runner
+        shell: bash
+        run: |
+          cd dmd-src
+          DMDBIN=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          make -j$(nproc) -C druntime MODEL=64 OS=windows BUILD=release DMD="$DMDBIN"
+          "$DMDBIN" -g -i -Icompiler/test -release compiler/test/run.d -ofgenerated/run
+          generated/run -j1 --environment MODEL=64 HOST_DMD="$DMDBIN" runnable/test21891.d
+          echo "case5 exit=$?  (expect 0 - the actual regression test for #21891 passes under dmd's own test runner)"
