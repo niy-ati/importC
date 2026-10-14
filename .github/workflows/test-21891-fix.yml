@@ -117,9 +117,15 @@ jobs:
       - name: Case 5 - run the actual regression test through dmd's own real test runner
         shell: bash
         run: |
-          cd dmd-src
           DMDBIN=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
+          cd dmd-src
           make -j$(nproc) -C druntime MODEL=64 OS=windows BUILD=release DMD="$DMDBIN"
-          "$DMDBIN" -g -i -Icompiler/test -release compiler/test/run.d -ofgenerated/run
+          mkdir -p ../phobos
+          curl -sL "https://github.com/dlang/phobos/archive/master.tar.gz" -o ../phobos.tar.gz
+          tar xzf ../phobos.tar.gz -C ../phobos --strip-components=1
+          make -j$(nproc) -C ../phobos MODEL=64 OS=windows BUILD=release DMD_DIR=../dmd-src DMD="$DMDBIN"
+          LIBDIR=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64")
+          PHOBOSLIBDIR=$(cygpath -w "$GITHUB_WORKSPACE/phobos/generated/windows/release/64")
+          "$DMDBIN" -g -i -Icompiler/test -I../phobos -Idruntime/import -release compiler/test/run.d -ofgenerated/run -L/LIBPATH:"$LIBDIR" -L/LIBPATH:"$PHOBOSLIBDIR" -defaultlib=phobos64
           generated/run -j1 --environment MODEL=64 HOST_DMD="$DMDBIN" runnable/test21891.d
           echo "case5 exit=$?  (expect 0 - the actual regression test for #21891 passes under dmd's own test runner)"
