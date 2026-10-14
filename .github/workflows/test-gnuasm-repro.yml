@@ -1,0 +1,40 @@
+name: Reproduce sljit CPUID GNU inline asm limitation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dlang-community/setup-dlang@v1
+        with:
+          compiler: dmd-latest
+
+      - name: Reproduce the exact sljit CPUID inline asm
+        shell: bash
+        run: |
+          mkdir -p repro && cd repro
+          cat > cpuid_repro.c << 'EOF'
+          typedef unsigned int sljit_u32;
+
+          static void execute_cpu_id(sljit_u32 info[4])
+          {
+              __asm__ __volatile__ (
+                  "cpuid\n"
+                  : "=a" (info[0]), "=b" (info[1]), "=c" (info[2]), "=d" (info[3])
+                  : "0" (info[0]), "2" (info[2])
+              );
+          }
+
+          int main(void)
+          {
+              sljit_u32 info[4] = {0, 0, 0, 0};
+              execute_cpu_id(info);
+              return (int)info[0];
+          }
+          EOF
+          dmd -m64 cpuid_repro.c -of=cpuid_repro
+          echo "compile exit=$?  (expect 0, dmd should accept the syntax)"
+          ./cpuid_repro
+          echo "run exit=$?  (this is what we're confirming: does it actually run cpuid, or trip the runtime assert)"
