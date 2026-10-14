@@ -130,14 +130,10 @@ jobs:
           generated/run -j1 --environment MODEL=64 HOST_DMD="$DMDBIN" runnable/test21891.d
           echo "case5 exit=$?  (expect 0 - the actual regression test for #21891 passes under dmd's own test runner)"
 
-      - name: Case 6 - generate the correct TEST_OUTPUT for the new fail_compilation test
+      - name: Case 6 - confirm the fail_compilation test passes with the hand-written TEST_OUTPUT
         shell: bash
         run: |
           DMDBIN=$(cygpath -w "$GITHUB_WORKSPACE/dmd-src/generated/windows/release/64/dmd.exe")
           cd dmd-src
-          AUTO_UPDATE=1 generated/run -j1 --environment MODEL=64 HOST_DMD="$DMDBIN" fail_compilation/test21891.d || true
-          echo "=== corrected test21891.d ==="
-          cat compiler/test/fail_compilation/test21891.d
-          echo "=== re-run to confirm it now actually passes ==="
           generated/run -j1 --environment MODEL=64 HOST_DMD="$DMDBIN" fail_compilation/test21891.d
           echo "case6 exit=$?  (expect 0 - the fail_compilation test passes with the corrected TEST_OUTPUT)"
