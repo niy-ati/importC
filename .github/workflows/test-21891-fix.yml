@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: niy-ati/dmd
-          ref: fix-21891-union-compat
+          ref: fix-21891-union-compat-v2
           path: dmd-src
 
       - uses: ilammy/msvc-dev-cmd@v1
